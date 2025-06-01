@@ -16,7 +16,7 @@ echo " "
 
 sleep 3
 echo "##### Extracting Provider Binary #####"
-tar -xzf latest.tar.gz --strip-components=2 -C /app linux/
+tar -xzf latest.tar.gz --strip-components=2 -C /app linux/amd64/provider
 chmod +x /app/provider
 rm latest.tar.gz
 echo " "
