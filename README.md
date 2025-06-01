@@ -11,7 +11,5 @@ A Dockerized setup for automating urNetwork Provider deployment. It fetches the 
 ## Installation & Usage  
 - do not forget to replace "Your-Email@here.com" and "YourPassword"
 ```bash
-git clone https://github.com/techroy23/Docker-UrNetwork
-cd Docker-UrNetwork
-docker build -t docker-urnetwork . --no-cache
-docker run -d --name urnetwork_image -e USER_AUTH="Your-Email@here.com" -e PASSWORD="YourPassword" docker-urnetwork
+docker run -d --platform linux/arm64 -e USER_AUTH="Your-Email@here.com" -e PASSWORD="YourPassword" ghcr.io/techroy23/docker-urnetwork:latest 
+docker run -d --platform linux/amd64 -e USER_AUTH="Your-Email@here.com" -e PASSWORD="YourPassword" ghcr.io/techroy23/docker-urnetwork:latest
