@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Check if USER_AUTH and PASSWORD are set
+if [[ -z "$USER_AUTH" || -z "$PASSWORD" ]]; then
+    echo "Error: USER_AUTH or PASSWORD is not set."
+    exit 1
+fi
+
 sleep 3
 echo "##### Fetching Latest Release Info #####"
 RELEASE_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
