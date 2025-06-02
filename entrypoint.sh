@@ -54,14 +54,14 @@ echo " "
 sleep 5
 echo "##### Starting Provider #####"
 ./provider provide &
-echo " "
 
 sleep 30
+echo " "
 echo "##### Checking Network Activity #####"
-netstat -p
+netstat -p | grep provide
 echo " "
 
 sleep 10
 echo "##### Running Indefinitely #####"
-tail -f /dev/null
+tail -f /dev/null &
 echo " "
