@@ -63,5 +63,5 @@ echo " "
 
 sleep 10
 echo "##### Running Indefinitely #####"
-tail -f /dev/null &
+tail -f /dev/null
 echo " "
