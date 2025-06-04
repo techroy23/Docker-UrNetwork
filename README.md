@@ -13,3 +13,7 @@ A Dockerized setup for automating urNetwork Provider deployment. It fetches the 
 ```bash
 docker run -d --platform linux/arm64 -e USER_AUTH="Your-Email@here.com" -e PASSWORD="YourPassword" ghcr.io/techroy23/docker-urnetwork:latest 
 docker run -d --platform linux/amd64 -e USER_AUTH="Your-Email@here.com" -e PASSWORD="YourPassword" ghcr.io/techroy23/docker-urnetwork:latest
+```
+
+## Promo Video
+[![Watch the Video](https://img.youtube.com/vi/E1tXbiLSU2I/0.jpg)](https://www.youtube.com/watch?v=E1tXbiLSU2I)
