@@ -3,8 +3,10 @@ name: Build and Push Multi-Arch Docker Image
 on:
   push:
     branches:
-      - main  # Runs when code is pushed to main
-  workflow_dispatch:  # Allows manual trigger
+      - main
+  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-sub-build]
 
 jobs:
   build:
