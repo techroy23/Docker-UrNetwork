@@ -21,6 +21,12 @@ jobs:
       - name: Log in to GHCR
         run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Notify on Telegram
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+          -d "text=🚀 GitHub Action triggered in ${{ github.repository }} on branch ${{ github.ref }}"
+
       - name: Build and Push Multi-Arch Image
         run: |
           docker buildx build --platform linux/amd64,linux/arm64 \
