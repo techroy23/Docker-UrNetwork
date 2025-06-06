@@ -23,9 +23,16 @@ jobs:
 
       - name: Notify on Telegram
         run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
+          
+          MESSAGE="🚀 GitHub Action triggered%0A"
+          MESSAGE+="📦 Repository: ${{ github.repository }}%0A"
+          MESSAGE+="🌱 Branch: ${{ github.ref }}%0A"
+          MESSAGE+="🕒 Triggered at: ${TIMESTAMP}"
+          
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-          -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-          -d "text=🚀 GitHub Action triggered in ${{ github.repository }} on branch ${{ github.ref }}"
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "text=${MESSAGE}"
 
       - name: Build and Push Multi-Arch Image
         run: |
