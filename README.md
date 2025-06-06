@@ -33,3 +33,11 @@ docker run -d --platform linux/arm64 \
     <img src="https://img.youtube.com/vi/E1tXbiLSU2I/0.jpg" alt="Watch the Video">
   </a>
 </div>
+
+## Promo
+<ul><li><a href="https://ur.io/c?bonus=0MYG84"> [ REGISTER HERE ] </a></li></ul>
+<div align="center">
+  <a href="https://ur.io/c?bonus=0MYG84">
+    <img src="screenshot/img0.png" alt="Alt text">
+  </a>
+</div>
