@@ -3,17 +3,33 @@ A Dockerized setup for automating urNetwork Provider deployment. It fetches the 
 
 ## Features  
 - **Automated Provider Deployment**: Fetches and extracts the latest release from GitHub.  
-- **Authentication Handling**: Uses environment variables for secure authentication.  
-- **Background Execution**: Starts the provider and monitors network activity.  
+- **Authentication Handling**: Uses environment variables `USER_AUTH` and `PASSWORD` for secure authentication.  
 - **Minimal Manual Intervention**: Designed for efficiency and error-resistant execution.  
 - **Network Diagnostics**: Includes tools like `netstat` for monitoring activity.  
 
-## Installation & Usage  
-- do not forget to replace "Your-Email@here.com" and "YourPassword"
+## Run
 ```bash
-docker run -d --platform linux/arm64 -e USER_AUTH="Your-Email@here.com" -e PASSWORD="YourPassword" ghcr.io/techroy23/docker-urnetwork:latest 
-docker run -d --platform linux/amd64 -e USER_AUTH="Your-Email@here.com" -e PASSWORD="YourPassword" ghcr.io/techroy23/docker-urnetwork:latest
+
+# Option 1 : amd64 build
+docker run -d --platform linux/amd64 \
+  -e USER_AUTH="Your-Email@here.com" \
+  -e PASSWORD="YourPassword" \
+  --shm-size=2gb \
+  ghcr.io/techroy23/docker-urnetwork:latest
+
+
+# Option 2 : arm64 build
+docker run -d --platform linux/arm64 \
+  -e USER_AUTH="Your-Email@here.com" \
+  -e PASSWORD="YourPassword" \
+  --shm-size=2gb \
+  ghcr.io/techroy23/docker-urnetwork:latest
+
 ```
 
 ## Promo Video
-[![Watch the Video](https://img.youtube.com/vi/E1tXbiLSU2I/0.jpg)](https://www.youtube.com/watch?v=E1tXbiLSU2I)
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=E1tXbiLSU2I">
+    <img src="https://img.youtube.com/vi/E1tXbiLSU2I/0.jpg" alt="Watch the Video">
+  </a>
+</div>
