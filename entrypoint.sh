@@ -63,5 +63,27 @@ echo " "
 
 sleep 10
 echo "##### Running Indefinitely #####"
+echo " "
+echo "### ### ###"
+echo " netstat "
+echo "### ### ###"
+
+monitor_netstat() {
+    while true; do
+        echo " "
+        echo " "
+        netstat -antp | awk 'NR==2 || /ESTABLISHED/'
+        echo " "
+        echo " "
+        sleep 300
+    done
+}
+
+monitor_netstat &
+bg_pid=$!
+
+sleep 5
+echo "Monitoring started in the background. PID: $bg_pid"
+
 tail -f /dev/null
 echo " "
