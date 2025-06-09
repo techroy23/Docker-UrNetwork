@@ -2,7 +2,7 @@ FROM debian:latest
 
 # Install required dependencies
 RUN apt-get update && apt-get install -y \
-    curl wget tar htop net-tools \
+    curl wget tar htop net-tools tcpdump \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
