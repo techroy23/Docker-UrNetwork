@@ -62,28 +62,16 @@ netstat -p | grep provide
 echo " "
 
 sleep 10
+echo " "
 echo "##### Running Indefinitely #####"
 echo " "
+
+echo " "
 echo "### ### ###"
-echo " netstat "
+echo " TCP DUMP "
 echo "### ### ###"
-
-monitor_netstat() {
-    while true; do
-        echo " "
-        echo " "
-        netstat -antp | awk 'NR==2 || /ESTABLISHED/'
-        echo " "
-        echo " "
-        sleep 300
-    done
-}
-
-monitor_netstat &
-bg_pid=$!
-
-sleep 5
-echo "Monitoring started in the background. PID: $bg_pid"
+tcpdump -l -i "$(ls /sys/class/net | grep -E '^eth[0-9]+|^ens')" -nn -q 'tcp and tcp[4:2] > 0 or udp and udp[4:2] > 0' &
+echo " "
 
 tail -f /dev/null
 echo " "

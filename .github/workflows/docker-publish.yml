@@ -1,4 +1,4 @@
-name: Build and Push Multi-Arch Docker Image
+name: Build and Push Docker Image
 
 on:
   push:
@@ -15,48 +15,48 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set Up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Notify Start on Discord
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
+          JSON_PAYLOAD=$(jq -n --arg title "🛠️ Build Started" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg time "**🕒 Triggered at:** ${TIMESTAMP}" \
+            '{ "embeds": [{ "title": $title, "description": ($repo + "\n" + $branch + "\n" + $time) }] }')
+          
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD"
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Notify Start on Telegram
-        run: |
-          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
-          MESSAGE="🛠️ Build Started %0A"
-          MESSAGE+="📦 Repository: ${{ github.repository }}%0A"
-          MESSAGE+="🌱 Branch: ${{ github.ref }}%0A"
-          MESSAGE+="🕒 Triggered at: ${TIMESTAMP}"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=${MESSAGE}"
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and Push Multi-Arch Image
         run: |
           docker buildx build --platform linux/amd64,linux/arm64 \
           -t ghcr.io/${{ github.actor }}/docker-urnetwork:latest --push .
 
-      - name: Notify Success on Telegram
+      - name: Notify Success on Discord
         if: success()
         run: |
           TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
-          MESSAGE="✅ Build Done %0A"
-          MESSAGE+="📦 Repository: ${{ github.repository }}%0A"
-          MESSAGE+="🌱 Branch: ${{ github.ref }}%0A"
-          MESSAGE+="🕒 Completed at: ${TIMESTAMP}"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=${MESSAGE}"
+          JSON_PAYLOAD=$(jq -n --arg title "✅ Build Done" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg time "**🕒 Completed at:** ${TIMESTAMP}" \
+            '{ "embeds": [{ "title": $title, "description": ($repo + "\n" + $branch + "\n" + $time) }] }')
+          
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD"
 
-      - name: Notify Failure on Telegram
+      - name: Notify Failure on Discord
         if: failure()
         run: |
           TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
-          MESSAGE="❌ Build Error %0A"
-          MESSAGE+="📦 Repository: ${{ github.repository }}%0A"
-          MESSAGE+="🌱 Branch: ${{ github.ref }}%0A"
-          MESSAGE+="🕒 Failed at: ${TIMESTAMP}"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=${MESSAGE}"
+          JSON_PAYLOAD=$(jq -n --arg title "❌ Build Error" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg time "**🕒 Failed at:** ${TIMESTAMP}" \
+            '{ "embeds": [{ "title": $title, "description": ($repo + "\n" + $branch + "\n" + $time) }] }')
+          
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD"
