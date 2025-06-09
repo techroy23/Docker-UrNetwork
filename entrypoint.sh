@@ -70,7 +70,8 @@ echo " "
 echo "### ### ###"
 echo " TCP DUMP "
 echo "### ### ###"
-tcpdump -l -i "$(ls /sys/class/net | grep -E '^eth[0-9]+|^ens')" -nn -q 'tcp and tcp[4:2] > 0 or udp and udp[4:2] > 0' &
+# tcpdump -l -i "$(ls /sys/class/net | grep -E '^eth[0-9]+|^ens')" -nn -q 'tcp and tcp[4:2] > 0 or udp and udp[4:2] > 0' &
+tshark -i eth0 -Y "not ssh and frame.len > 1000" -T fields -e ip.src -e ip.dst -e frame.len &
 echo " "
 
 tail -f /dev/null
