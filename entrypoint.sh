@@ -40,12 +40,12 @@ fi
 # -----------------------------------------------------------------------------
 if [ -n "$PROXY" ]; then
     echo "##### Configuring ProxyChains #####"
-    protocol=$(echo "$proxy" | awk -F'://' '{print $1}')
-    auth=$(echo "$proxy" | awk -F'@' '{print $1}' | awk -F'://' '{print $2}')
+    protocol=$(echo "$PROXY" | awk -F'://' '{print $1}')
+    auth=$(echo "$PROXY" | awk -F'@' '{print $1}' | awk -F'://' '{print $2}')
     username=$(echo "$auth" | awk -F':' '{print $1}')
     password=$(echo "$auth" | awk -F':' '{print $2}')
-    address=$(echo "$proxy" | awk -F'@' '{print $2}' | awk -F':' '{print $1}')
-    port=$(echo "$proxy" | awk -F':' '{print $NF}')
+    address=$(echo "$PROXY" | awk -F'@' '{print $2}' | awk -F':' '{print $1}')
+    port=$(echo "$PROXY" | awk -F':' '{print $NF}')
     if [[ -z "$protocol" || -z "$username" || -z "$password" || -z "$address" || -z "$port" ]]; then
         echo "Error: Unable to parse proxy details correctly!"
         exit 1
