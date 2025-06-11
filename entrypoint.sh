@@ -38,7 +38,7 @@ fi
 # -----------------------------------------------------------------------------
 # Proxy Configuration (if applicable)
 # -----------------------------------------------------------------------------
-if [ -n "$proxy" ]; then
+if [ -n "$PROXY" ]; then
     echo "##### Configuring ProxyChains #####"
     protocol=$(echo "$proxy" | awk -F'://' '{print $1}')
     auth=$(echo "$proxy" | awk -F'@' '{print $1}' | awk -F'://' '{print $2}')
