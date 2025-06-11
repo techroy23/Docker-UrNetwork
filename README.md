@@ -12,6 +12,7 @@ A Dockerized setup for automating urNetwork Provider deployment. It fetches the 
 
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
+  --pull always \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
   --shm-size=2gb \
@@ -20,6 +21,7 @@ docker run -d --platform linux/amd64 \
 
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
+  --pull always \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
   --shm-size=2gb \
