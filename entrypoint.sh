@@ -1,72 +1,30 @@
 #!/bin/bash
 set -e
 
-# Check if USER_AUTH and PASSWORD are set
 if [[ -z "$USER_AUTH" || -z "$PASSWORD" ]]; then
     echo "Error: USER_AUTH or PASSWORD is not set."
     exit 1
 fi
 
-sleep 3
-echo "##### Fetching Latest Release Info #####"
-RELEASE_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
-echo "Checking: $RELEASE_URL"
-TAR_URL=$(curl -s "$RELEASE_URL" | grep '"browser_download_url":' | grep '.tar.gz"' | cut -d '"' -f 4)
-echo " "
-
-sleep 3
-echo "##### Downloading Provider Binary #####"
-echo "Downloading: $TAR_URL"
-wget -q "$TAR_URL" -O latest.tar.gz
-echo " "
-
-sleep 3
-echo "##### Extracting Provider Binary #####"
-ARCH=$(uname -m)
-
-if [[ "$ARCH" == "x86_64" ]]; then
-    TARGET_ARCH="amd64"
-elif [[ "$ARCH" == "aarch64" ]]; then
-    TARGET_ARCH="arm64"
-else
-    echo "Unsupported architecture: $ARCH"
-    exit 1
-fi
-
-echo "Detected architecture: $TARGET_ARCH"
-tar -xzf latest.tar.gz --strip-components=2 -C /app linux/$TARGET_ARCH/provider
-chmod +x /app/provider
-
-rm latest.tar.gz
-echo " "
-
-sleep 3
+sleep 2
 echo "##### Clearing JWT Cache #####"
 rm -f /root/.urnetwork/jwt
 echo " "
 
-sleep 5
+sleep 2
 cd /app
 echo "##### Authenticating Provider #####"
 ./provider auth --user_auth="${USER_AUTH}" --password="${PASSWORD}"
 echo " "
 
-sleep 5
+sleep 2
 echo "##### Starting Provider #####"
 ./provider provide &
 
-sleep 3
+sleep 2
 echo " "
 echo "##### Running Indefinitely #####"
 echo " "
-
-# echo " "
-# echo "### ### ###"
- #echo " TCP DUMP "
-# echo "### ### ###"
-# tcpdump -l -i "$(ls /sys/class/net | grep -E '^eth[0-9]+|^ens')" -nn -q 'tcp and tcp[4:2] > 0 or udp and udp[4:2] > 0' &
-# tshark -i eth0 -Y "not ssh and frame.len > 1000" -T fields -e ip.src -e ip.dst -e frame.len &
-# echo " "
 
 tail -f /dev/null
 echo " "
