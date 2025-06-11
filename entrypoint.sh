@@ -51,25 +51,33 @@ if [ -n "$PROXY" ]; then
         exit 1
     fi
     cat <<EOF > /etc/proxychains.conf
-dynamic_chain
+strict_chain
 proxy_dns
-tcp_read_time_out 15000
-tcp_connect_time_out 8000
+tcp_read_time_out 30000
+tcp_connect_time_out 30000
 
 [ProxyList]
 $protocol $address $port $username $password
 EOF
-
+    echo " "
     echo "Using ProxyChains..."
     sleep 3
+    echo " "
+    ipchecker=$(proxychains curl -s ifconfig.me)
+    echo "Your proxied IP: $ipchecker"
+    echo " "
     proxychains4 ./provider auth --user_auth="${USER_AUTH}" --password="${PASSWORD}"
+    echo " "
     sleep 3
     proxychains4 ./provider provide &
 else
+    echo " "
     echo "No proxy set. Running app directly..."
     sleep 3
+    echo " "
     ./provider auth --user_auth="${USER_AUTH}" --password="${PASSWORD}"
     sleep 3
+    echo " "
     proxychains4 ./provider provide &
 fi
 
