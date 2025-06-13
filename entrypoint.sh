@@ -48,7 +48,7 @@ echo " "
 ./provider auth --user_auth="${USER_AUTH}" --password="${PASSWORD}"
 sleep 3
 echo " "
-proxychains4 ./provider provide &
+./provider provide &
 echo " "
 
 while true; do sleep 3600; done
