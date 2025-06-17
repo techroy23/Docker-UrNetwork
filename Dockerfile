@@ -71,6 +71,13 @@ RUN set -eux; \
     rm provider.tar.gz
 
 # -----------------------------------------------------------------------------
+# Ensure persistent JWT directory exists (created during build)
+# and declare it as a VOLUME so users can persist credentials.
+# -----------------------------------------------------------------------------
+RUN mkdir -p /root/.urnetwork
+VOLUME ["/root/.urnetwork"]
+
+# -----------------------------------------------------------------------------
 # Entry point script
 # We copy our tiny shell wrapper that will eventually `exec ./provider`.
 # -----------------------------------------------------------------------------
