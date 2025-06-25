@@ -1,0 +1,2 @@
+*.docker linguist-language=Dockerfile
+Dockerfile linguist-language=Dockerfile

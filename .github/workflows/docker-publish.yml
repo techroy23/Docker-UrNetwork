@@ -1,0 +1,62 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-sub-build]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Notify Start on Discord
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
+          JSON_PAYLOAD=$(jq -n --arg title "🛠️ Build Started" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg time "**🕒 Triggered at:** ${TIMESTAMP}" \
+            '{ "embeds": [{ "title": $title, "description": ($repo + "\n" + $branch + "\n" + $time) }] }')
+          
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD"
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Multi-Arch Image
+        run: |
+          docker buildx build --platform linux/amd64,linux/arm64 \
+          -t ghcr.io/${{ github.actor }}/docker-urnetwork:latest --push .
+
+      - name: Notify Success on Discord
+        if: success()
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
+          JSON_PAYLOAD=$(jq -n --arg title "✅ Build Done" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg time "**🕒 Completed at:** ${TIMESTAMP}" \
+            '{ "embeds": [{ "title": $title, "description": ($repo + "\n" + $branch + "\n" + $time) }] }')
+          
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD"
+
+      - name: Notify Failure on Discord
+        if: failure()
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S %Z %z")
+          JSON_PAYLOAD=$(jq -n --arg title "❌ Build Error" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg time "**🕒 Failed at:** ${TIMESTAMP}" \
+            '{ "embeds": [{ "title": $title, "description": ($repo + "\n" + $branch + "\n" + $time) }] }')
+          
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD"
