@@ -1,6 +1,6 @@
 # Docker-UrNetwork
 A **lightweight, automated Docker setup** for deploying the **urNetwork Provider**. It dynamically fetches the latest release from GitHub, extracts binaries, manages authentication through environment variables, and runs the provider in the background. The container is built on **Alpine Linux**, ensuring a minimal footprint while including essential system tools for network diagnostics.
-  
+   
 ## Features  
 - **Automated Provider Deployment**: Dynamically fetches and extracts the latest release from GitHub.  
 - **Secure Authentication Handling**: Uses environment variables `USER_AUTH` and `PASSWORD`.  
