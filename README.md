@@ -16,7 +16,6 @@ docker run -d --platform linux/amd64 \
   --cap-add NET_ADMIN
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
-  -e TARGETDNS=76.76.2.3 \                   # Set the target DNS server environment variable
   ghcr.io/techroy23/docker-urnetwork:latest
 
 # Option 2 : arm64 build
@@ -24,7 +23,6 @@ docker run -d --platform linux/arm64 \
   --cap-add NET_ADMIN
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
-  -e TARGETDNS=76.76.2.3 \                   # Set the target DNS server environment variable
   ghcr.io/techroy23/docker-urnetwork:latest
 
 # Tip: For better privacy and reliability, consider setting up your **own DNS resolver** (e.g., Unbound or CoreDNS)
