@@ -1,37 +1,19 @@
 #!/bin/sh
 
-set -e  # Exit immediately if any command fails
+set -e
 
 # -----------------------------------------------------------------------------
 # Validate Required Environment Variables
 # -----------------------------------------------------------------------------
-if [[ -z "$USER_AUTH" || -z "$PASSWORD" ]]; then
+if [ -z "$USER_AUTH" ] || [ -z "$PASSWORD" ]; then
     echo "Error: USER_AUTH or PASSWORD is not set."
     exit 1
 fi
 
 # -----------------------------------------------------------------------------
-# Check for Cached Authentication Token
+# Ensure /app Directory Exists
 # -----------------------------------------------------------------------------
-sleep 3
-echo " "
-JWT_FILE="/root/.urnetwork/jwt"
-if [ -f "$JWT_FILE" ]; then
-    echo " ################################ "
-    echo " ### Found existing JWT Token ### "
-    echo " ################################ "
-else
-    echo " ############################ "
-    echo " ### Recreating JWT Cache ### "
-    echo " ############################ "
-    ./provider auth --user_auth="${USER_AUTH}" --password="${PASSWORD}" -f
-fi
-echo " "
-
-# -----------------------------------------------------------------------------
-# Ensure /app Directory Exists Before Changing to It
-# -----------------------------------------------------------------------------
-if [[ -d "/app" ]]; then
+if [ -d "/app" ]; then
     cd /app || { echo "Failed to change directory to /app"; exit 1; }
 else
     echo "Error: /app directory does not exist!"
@@ -39,53 +21,50 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Validate Provider Executable Before Running
+# Validate Provider Executable
 # -----------------------------------------------------------------------------
-if ! [[ -x "./provider" ]]; then
-    echo "Error: ./provider is missing or not executable!"
+if [ ! -x "./provider" ]; then
+    echo "Making ./provider executable..."
     chmod +x ./provider || { echo "Failed to make ./provider executable"; exit 1; }
 fi
 
 # -----------------------------------------------------------------------------
-# Keep Script Running Indefinitely to Prevent Premature Container Exit
-# With Crash Handling and Throttling
+# Run IP Info Script
 # -----------------------------------------------------------------------------
-
-
 sh /app/ipinfo.sh
-
 sleep 3
-echo " "
-echo " ################################# "
-echo " ### Starting Provider Service ### "
-echo " ################################# "
-echo " "
 
-sleep 3
-echo " "
+# -----------------------------------------------------------------------------
+# Main Loop
+# -----------------------------------------------------------------------------
+while true; do
+    echo "Checking for existing JWT..."
+    JWT_FILE="/root/.urnetwork/jwt"
+    if [ ! -f "$JWT_FILE" ]; then
+        echo "JWT not found. Authenticating..."
+        ./provider auth --user_auth="${USER_AUTH}" --password="${PASSWORD}" -f
+    fi
 
-attempt=1
-max_attempts=2
+    echo "Starting provider..."
+    ./provider provide &
+    PROVIDER_PID=$!
 
-while [ $attempt -le $max_attempts ]; do
-    ./provider provide
-    exit_code=$?
-
-    if [ $exit_code -eq 0 ]; then
-        echo "Provider exited cleanly. Restart loop continues."
+    # Generate random number between 1 and 15
+    if command -v shuf >/dev/null 2>&1; then
+        RANDOM_MINUTES=$(shuf -i 1-15 -n 1)
     else
-        echo "Provider crashed or exited with code $exit_code."
-        echo "Cleaning up JWT and sleeping to prevent auth flood..."
-        rm -f /root/.urnetwork/jwt
-        sleep $((15 * 60))  # Sleep for 15 minutes
+        RANDOM_MINUTES=$(expr $(date +%s) % 15 + 1)
     fi
 
-    if [ $attempt -eq $max_attempts ]; then
-        echo "Provider crashed twice. Exiting with code 255."
-        exit 255
-    fi
+    TOTAL_WAIT=$((3600 + RANDOM_MINUTES * 60))
+    echo "Sleeping for $((TOTAL_WAIT / 60)) minutes before restarting provider..."
+    sleep "$TOTAL_WAIT"
 
-    ((attempt++))
+    echo "Killing provider process..."
+    pkill -f "./provider" || echo "No matching processes found."
+
+    echo "Deleting JWT token..."
+    rm -f "$JWT_FILE"
+
+    echo "Restarting loop..."
 done
-
-# while true; do sleep 3600; done
