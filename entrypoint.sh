@@ -38,7 +38,11 @@ sleep 3
 # Main Loop
 # -----------------------------------------------------------------------------
 while true; do
-    echo "Checking for existing JWT..."
+    echo " "
+    echo " ################################# "
+    echo " ### Checking for existing JWT ### "
+    echo " ################################# "
+    echo " "
     JWT_FILE="/root/.urnetwork/jwt"
     if [ ! -f "$JWT_FILE" ]; then
         echo " "
@@ -63,7 +67,7 @@ while true; do
         RANDOM_MINUTES=$(expr $(date +%s) % 15 + 1)
     fi
 
-    TOTAL_WAIT=$((3600 + RANDOM_MINUTES * 60))
+    TOTAL_WAIT=$((14400 + RANDOM_MINUTES * 60))
     echo " "
     echo " ############################################################# "
     echo " ### Sleeping for $((TOTAL_WAIT / 60)) minutes before restarting provider... ### "
