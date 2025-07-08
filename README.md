@@ -19,14 +19,14 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
-  --cap-add NET_ADMIN
+  --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
   ghcr.io/techroy23/docker-urnetwork:latest
 
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
-  --cap-add NET_ADMIN
+  --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
   ghcr.io/techroy23/docker-urnetwork:latest
