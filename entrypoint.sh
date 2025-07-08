@@ -127,7 +127,7 @@ main_provider(){
         echo " "
         if [ "$failures" -ge 3 ]; then
             echo " "
-            echo "  >>> An2Kin >>> too many crashes; clearing JWT and reauthenticating"
+            echo " >>> An2Kin >>> too many crashes; clearing JWT and reauthenticating"
             echo " "
             rm -f "$JWT_FILE"
             check_credentials
@@ -160,7 +160,7 @@ runner() {
     ) &
     WATCHER_PID=$!
     echo " "
-    echo ">>> An2Kin >>> Time‐watcher PID is $WATCHER_PID"
+    echo " >>> An2Kin >>> Time‐watcher PID is $WATCHER_PID"
     echo " "
     main_provider
 }
