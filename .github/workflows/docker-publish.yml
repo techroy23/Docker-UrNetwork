@@ -1,0 +1,135 @@
+name: Build and Push Docker Image
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-sub-build]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
+
+      - name: Fetch Latest Release Info
+        id: version_check
+        run: |
+          raw=$(curl -s https://api.github.com/repos/urnetwork/build/releases/latest \
+            | jq -r '.tag_name')
+          latest=${raw#v}
+          echo "latest=$latest" >> $GITHUB_OUTPUT
+
+          if [[ -f version.txt ]]; then
+            stored=$(<version.txt)
+          else
+            stored=""
+          fi
+          echo "stored=$stored" >> $GITHUB_OUTPUT
+
+          if [[ "$latest" != "$stored" ]]; then
+            echo "update_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "update_needed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify Skip Build on Discord
+        if: steps.version_check.outputs.update_needed == 'false'
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S")
+          payload=$(jq -n \
+            --arg title "⏭️ Build Skipped" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg oldv "**🔖 Version:** ${{ steps.version_check.outputs.stored }}" \
+            --arg time "**🕒 Checked at:** ${TIMESTAMP}" \
+            '{embeds:[{title:$title, description:($repo+"\n"+$branch+"\n"+$oldv+"\n"+$time)}]}')
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" -d "$payload"
+
+      - name: Notify Start on Discord
+        if: steps.version_check.outputs.update_needed == 'true'
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S")
+          payload=$(jq -n \
+            --arg title "🛠️ Build Started" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg newv "**🔖 Version:** ${{ steps.version_check.outputs.latest }}" \
+            --arg time "**🕒 Triggered at:** ${TIMESTAMP}" \
+            '{embeds:[{title:$title, description:($repo+"\n"+$branch+"\n"+$newv+"\n"+$time)}]}')
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" -d "$payload"
+
+      - name: Update version.txt
+        if: steps.version_check.outputs.update_needed == 'true'
+        run: echo "${{ steps.version_check.outputs.latest }}" > version.txt
+
+      - name: Update README.md version heading
+        if: steps.version_check.outputs.update_needed == 'true'
+        run: |
+          sed -i \
+            "s|^# Docker-UrNetwork Releases v.*|# Docker-UrNetwork Releases v${{ steps.version_check.outputs.latest }}|" \
+            README.md
+
+      - name: Commit version.txt back to main
+        if: steps.version_check.outputs.update_needed == 'true'
+        run: |
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git add version.txt README.md
+          git commit -m "Update version.txt to ${{ steps.version_check.outputs.latest }} [skip ci]"
+          git remote set-url origin https://techroy23:${{ secrets.GH_PAT }}@github.com/techroy23/Docker-UrNetwork.git
+          git push origin main
+
+      - name: Log in to GHCR
+        if: steps.version_check.outputs.update_needed == 'true'
+        run: echo "${{ secrets.GHCR_TOKEN }}" \
+          | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set Up Docker Buildx
+        if: steps.version_check.outputs.update_needed == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Multi-Arch Image
+        if: steps.version_check.outputs.update_needed == 'true'
+        run: |
+          docker buildx build --platform linux/amd64,linux/arm64 \
+            -t ghcr.io/${{ github.actor }}/docker-urnetwork:${{ steps.version_check.outputs.latest }} \
+            --push .
+
+      - name: Notify Success on Discord
+        if: steps.version_check.outputs.update_needed == 'true' && success()
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S")
+          payload=$(jq -n \
+            --arg title "✅ Build Done" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg ver "**🔖 Version:** ${{ steps.version_check.outputs.latest }}" \
+            --arg time "**🕒 Completed at:** ${TIMESTAMP}" \
+            '{embeds:[{title:$title, description:($repo+"\n"+$branch+"\n"+$ver+"\n"+$time)}]}')
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" -d "$payload"
+
+      - name: Notify Failure on Discord
+        if: steps.version_check.outputs.update_needed == 'true' && failure()
+        run: |
+          TIMESTAMP=$(TZ=Asia/Manila date +"%Y-%m-%d %H:%M:%S")
+          payload=$(jq -n \
+            --arg title "❌ Build Error" \
+            --arg repo "**📦 Repository:** ${{ github.repository }}" \
+            --arg branch "**🌱 Branch:** ${{ github.ref }}" \
+            --arg ver "**🔖 Version:** ${{ steps.version_check.outputs.latest }}" \
+            --arg time "**🕒 Failed at:** ${TIMESTAMP}" \
+            '{embeds:[{title:$title, description:($repo+"\n"+$branch+"\n"+$ver+"\n"+$time)}]}')
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" -d "$payload"
