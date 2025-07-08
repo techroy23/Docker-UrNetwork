@@ -1,12 +1,18 @@
 # Docker-UrNetwork Releases v2025.7.4-668695950
-A **lightweight, automated Docker setup** for deploying the **urNetwork Provider**. It dynamically fetches the latest release from GitHub, extracts binaries, manages authentication through environment variables, and runs the provider in the background. The container is built on **Alpine Linux**, ensuring a minimal footprint while including essential system tools for network diagnostics.
+A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider. The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in-container updates, and network diagnostics.
   
 ## Features  
-- **Automated Provider Deployment**: Dynamically fetches and extracts the latest release from GitHub.  
-- **Secure Authentication Handling**: Uses environment variables `USER_AUTH` and `PASSWORD`.  
-- **Compact & Efficient**: Alpine-based container for minimal resource usage.  
-- **Integrated Network Diagnostics**: Includes tools like `netstat` for monitoring.  
-- **Resilient Execution**: Keeps the provider running continuously to avoid premature container exits.  
+- Automated retrieval of the latest urNetwork Provider binary on startup
+- Secure credential management via environment variables
+- Alpine-based image for minimal footprint
+- Persistent storage of authentication tokens and version metadata
+- Scheduled update watcher (default at 12:00 Asia/Manila)
+- Resilient provider execution with automatic retries and re-authentication
+- Built-in network diagnostic script (ipinfo.sh)
+
+## Prerequisites
+- Docker Engine
+- A valid urNetwork account (USER_AUTH and PASSWORD)
 
 ## Run
 ```sh
@@ -24,7 +30,6 @@ docker run -d --platform linux/arm64 \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
   ghcr.io/techroy23/docker-urnetwork:latest
-
 
 ```
 
