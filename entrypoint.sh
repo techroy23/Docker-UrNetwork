@@ -152,7 +152,16 @@ runner() {
             echo " >>> An2Kin >>> watcher: hit $UPDATE_TIME, updating"
             echo " "
             check_and_update
-            main_provider
+            if ! ps aux | grep -q '[p]rovider provide'; then
+                echo " "
+                echo ">>> An2Kin >>> provider not running; launching now"
+                echo " "
+                main_provider
+            else
+                echo " "
+                echo ">>> An2Kin >>> provider already running; skipping restart"
+                echo " "
+            fi
             sleep 60
         fi
         sleep 30
