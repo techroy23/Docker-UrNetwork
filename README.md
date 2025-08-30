@@ -1,6 +1,6 @@
 # Docker-UrNetwork Releases vnull
 A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider. The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in-container updates, and network diagnostics.
-  
+   
 ## Features  
 - Automated retrieval of the latest urNetwork Provider binary on startup
 - Secure credential management via environment variables
