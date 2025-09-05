@@ -5,7 +5,7 @@ set -e
 API_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
 APP_DIR="/app"
 VERSION_FILE="$APP_DIR/version.txt"
-JWT_FILE="~/.urnetwork/jwt"
+JWT_FILE="/root/.urnetwork/jwt"
 TMP_DIR="/tmp/urn_update"
 UPDATE_TIME="12:00"
 
@@ -94,15 +94,18 @@ login() {
     echo " "
 
     echo " "
-    echo " >>> An2Kin >>> Sleeping 60s before obtaining new JWT..."
+    echo " >>> An2Kin >>> Sleeping 15s before obtaining new JWT..."
     echo " "
-    sleep 60
+    sleep 15
 
     echo " "
     echo " >>> An2Kin >>> Obtaining new JWT…"
     echo " "
     "$APP_DIR/provider" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f \
-      || { echo "  >>> An2Kin >>> auth failed" >&2; exit 1; }
+    || { echo "  >>> An2Kin >>> auth failed" >&2; exit 1; }
+
+    sleep 5
+
     [ -s "$JWT_FILE" ] || { echo "  >>> An2Kin >>> no JWT file after auth" >&2; exit 1; }
     echo " "
     echo " >>> An2Kin >>> obtained JWT"
