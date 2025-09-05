@@ -197,6 +197,7 @@ runner() {
     echo " "
     echo " >>> An2Kin >>> Time‐watcher PID is $WATCHER_PID"
     echo " "
+    login
     main_provider
 }
 
