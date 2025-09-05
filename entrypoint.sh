@@ -5,7 +5,7 @@ set -e
 API_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
 APP_DIR="/app"
 VERSION_FILE="$APP_DIR/version.txt"
-JWT_FILE="/root/.urnetwork/jwt"
+JWT_FILE="~/.urnetwork/jwt"
 TMP_DIR="/tmp/urn_update"
 UPDATE_TIME="12:00"
 
@@ -87,14 +87,17 @@ check_and_update() {
     fi
 }
 
-check_credentials() {
-    mkdir -p "$(dirname "$JWT_FILE")"
-    if [ -s "$JWT_FILE" ]; then
-        echo " "
-        echo " >>> An2Kin >>> JWT present; skipping auth."
-        echo " "
-        return
-    fi
+login() {
+    rm -f ~/.urnetwork/jwt
+    echo " "
+    echo " >>> An2Kin >>> Removed existing JWT (if any)"
+    echo " "
+
+    echo " "
+    echo " >>> An2Kin >>> Sleeping 60s before obtaining new JWT..."
+    echo " "
+    sleep 60
+
     echo " "
     echo " >>> An2Kin >>> Obtaining new JWT…"
     echo " "
@@ -104,6 +107,24 @@ check_credentials() {
     echo " "
     echo " >>> An2Kin >>> obtained JWT"
     echo " "
+}
+
+check_proxy() {
+    echo " "
+    echo " >>> An2Kin >>> Checking proxy configuration"
+    echo " "
+    ls -la ~/.urnetwork/ 2>/dev/null || echo " >>> An2Kin >>> ~/.urnetwork/ not found"
+    rm -f ~/.urnetwork/proxy
+    if [ -f "/app/proxy.txt" ]; then
+        echo " "
+        echo " >>> An2Kin >>> proxy.txt found; adding proxy"
+        echo " "
+        "$APP_DIR/provider" proxy add --proxy_file="/app/proxy.txt"
+    else
+        echo " "
+        echo " >>> An2Kin >>> No proxy.txt found; skipping proxy add"
+        echo " "
+    fi
 }
 
 main_provider(){
@@ -141,9 +162,10 @@ main_provider(){
 }
 
 runner() {
+    sh /app/ipinfo.sh
     ensure_app_dir
-    check_credentials
     check_and_update
+    check_proxy
     (
       while :; do
         NOW="$(TZ='Asia/Manila' date +%H:%M)"
@@ -156,6 +178,7 @@ runner() {
                 echo " "
                 echo ">>> An2Kin >>> provider not running; launching now"
                 echo " "
+                login
                 main_provider
             else
                 echo " "
