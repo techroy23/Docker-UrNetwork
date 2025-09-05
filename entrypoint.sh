@@ -162,6 +162,9 @@ main_provider(){
 }
 
 runner() {
+    echo " "
+    echo " >>> An2Kin >>> Script version: v9.6.2025"
+    echo " "
     sh /app/ipinfo.sh
     ensure_app_dir
     check_and_update
