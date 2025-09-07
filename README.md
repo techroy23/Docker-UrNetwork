@@ -19,7 +19,7 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
-  --name="urnetwork-main"
+  --name="urnetwork-main" \
   --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
@@ -28,7 +28,7 @@ docker run -d --platform linux/amd64 \
 
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
-  --name="urnetwork-main"
+  --name="urnetwork-main" \
   --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \

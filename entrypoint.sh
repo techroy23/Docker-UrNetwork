@@ -1,5 +1,5 @@
 #!/bin/sh
-
+ 
 set -e
 
 API_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
