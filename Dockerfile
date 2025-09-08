@@ -34,6 +34,9 @@ RUN sed -i \
   -e 's/^;*UpdateInterval.*/UpdateInterval 15/' \
   -e 's/^;*PollInterval.*/PollInterval 15/' \
   -e 's/^;*SaveInterval.*/SaveInterval 1/' \
+  -e 's/^;*UnitMode.*/UnitMode 1/' \
+  -e 's/^;*RateUnit.*/RateUnit 0/' \
+  -e 's/^;*RateUnitMode.*/RateUnitMode 0/' \
   /etc/vnstat.conf
 
 RUN mkdir -p /root/.urnetwork
