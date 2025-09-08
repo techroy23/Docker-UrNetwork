@@ -1,10 +1,10 @@
 FROM alpine:latest
-  
+
 RUN apk update && apk add --no-cache \
+    tzdata iputils vnstat dos2unix \
     jq tar curl htop wget procps \
-    tzdata iputils dos2unix \
     iptables net-tools bind-tools \
-    ca-certificates \
+    busybox-extras ca-certificates \
   && rm -rf /var/cache/apk/*
 
 WORKDIR /app
@@ -31,14 +31,19 @@ RUN set -eux; \
 RUN mkdir -p /root/.urnetwork
 VOLUME ["/root/.urnetwork"]
 
+RUN mkdir -p /app/cgi-bin/
+COPY stats /app/cgi-bin/
+
 COPY entrypoint.sh /entrypoint.sh
 COPY ipinfo.sh /app/ipinfo.sh
 COPY version.txt /app/version.txt
 
 RUN dos2unix /entrypoint.sh
 RUN dos2unix /app/ipinfo.sh
+RUN dos2unix /app/cgi-bin/stats
 
 RUN chmod +x /entrypoint.sh
 RUN chmod +x /app/ipinfo.sh
+RUN chmod +x /app/cgi-bin/stats
 
 ENTRYPOINT ["/entrypoint.sh"]

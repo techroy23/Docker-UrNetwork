@@ -1,5 +1,5 @@
 #!/bin/sh
-  
+
 endpoint="https://api.bringyour.com/my-ip-info"
 response=$(curl -s "$endpoint")
 

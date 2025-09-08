@@ -1,7 +1,7 @@
 # Docker-UrNetwork Releases v2025.9.6-724256340
 A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider. The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in-container updates, and network diagnostics.
-   
-## Features  
+
+## Features
 - Automated retrieval of the latest urNetwork Provider binary on startup
 - Secure credential management via environment variables
 - Alpine-based image for minimal footprint
@@ -16,7 +16,6 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 
 ## Run
 ```sh
-
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
   --name="urnetwork-main" \
@@ -24,6 +23,8 @@ docker run -d --platform linux/amd64 \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
+  -v vnstat_data:/var/lib/vnstat \
+  -p 8080:8080 \
   ghcr.io/techroy23/docker-urnetwork:latest
 
 # Option 2 : arm64 build
@@ -33,6 +34,8 @@ docker run -d --platform linux/arm64 \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
+  -v vnstat_data:/var/lib/vnstat \
+  -p 8080:8080 \
   ghcr.io/techroy23/docker-urnetwork:latest
 
 # (Optional) Mount a proxy configuration file from host to container.
@@ -40,6 +43,19 @@ docker run -d --platform linux/arm64 \
 # Inside the container it will appear at /app/proxy.txt for automatic detection.
 # Omit this line entirely if you don't want to use a proxy.
 
+## About `-v vnstat_data:/var/lib/vnstat` and `-p 8080:8080`
+
+# Stats JSON Portal = http://localhost:port/cgi-bin/stats
+
+# The `-v vnstat_data:/var/lib/vnstat` flag mounts a **named Docker volume** called `vnstat_data` to `/var/lib/vnstat` inside the container.  
+# `/var/lib/vnstat` is where vnstat stores its traffic database.  
+# Mounting it ensures your bandwidth history **persists** across container restarts or image updates.
+# - **If you run multiple containers**, each one needs its own separate vnstat database volume and port to avoid overwriting each other’s stats.  
+#   For example:
+#   -v vnstat_data1:/var/lib/vnstat  # for first container
+#   -p 9001:8080   # Host port 8081  # for first container
+#   -v vnstat_data2:/var/lib/vnstat  # for second container
+#   -p 9002:8080   # Host port 9000  # for second container
 ```
 
 ## Promo Video

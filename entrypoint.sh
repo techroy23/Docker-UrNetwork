@@ -1,5 +1,5 @@
 #!/bin/sh
- 
+
 set -e
 
 API_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
@@ -45,7 +45,7 @@ check_and_update() {
         CURRENT_VERSION=""
     fi
     echo " "
-    echo " >>> An2Kin >>> Current version: ${CURRENT_VERSION:-none}"
+    echo " >>> An2Kin >>> Current provider version: ${CURRENT_VERSION:-none}"
     echo " "
     RELEASE_JSON="$(curl -sL "$API_URL")"
     DOWNLOAD_URL="$(printf '%s\n' "$RELEASE_JSON" \
@@ -63,16 +63,16 @@ check_and_update() {
     LATEST_VERSION="$(printf '%s\n' "$DOWNLOAD_URL" \
       | sed -E 's#.*/download/v([^/]+)/.*#\1#')"
     echo " "
-    echo " >>> An2Kin >>> Latest version: $LATEST_VERSION"
+    echo " >>> An2Kin >>> Latest provider version: $LATEST_VERSION"
     echo " "
     if [ "$LATEST_VERSION" = "$CURRENT_VERSION" ]; then
         echo " "
-        echo " >>> An2Kin >>> Already at latest version; skipping."
+        echo " >>> An2Kin >>> Already at latest provider version; skipping."
         echo " "
         return 0
     else
         echo " "
-        echo " >>> An2Kin >>> Updating from ( $CURRENT_VERSION ) → ( $LATEST_VERSION )"
+        echo " >>> An2Kin >>> Updating provider from ( $CURRENT_VERSION ) → ( $LATEST_VERSION )"
         echo " "
         pkill -x provider 2>/dev/null || echo " >>> An2Kin >>> No provider to kill"
         mkdir -p "$TMP_DIR"
@@ -82,7 +82,7 @@ check_and_update() {
         mv "$TMP_DIR/linux/$URN_ARCH/provider" "$APP_DIR/provider"
         echo "$LATEST_VERSION" > "$VERSION_FILE"
         echo " "
-        echo " >>> An2Kin >>> Update complete"
+        echo " >>> An2Kin >>> Update provider complete"
         echo " "
     fi
 }
@@ -166,9 +166,30 @@ main_provider(){
 
 runner() {
     echo " "
-    echo " >>> An2Kin >>> Script version: v9.6.2025"
+    echo " >>> An2Kin >>> Script version: v9.9.2025"
     echo " "
+
     sh /app/ipinfo.sh
+
+    if [ -f /var/lib/vnstat/vnstat.db ]; then
+        echo ">>> An2Kin >>> vnStat DB already exists (SQLite backend)"
+    elif [ -f /var/lib/vnstat/.config ]; then
+        echo ">>> An2Kin >>> vnStat DB already exists (binary backend)"
+    else
+        echo ">>> An2Kin >>> Initializing vnStat database"
+        vnstatd --initdb
+    fi
+
+    vnstatd -d --alwaysadd >/dev/null 2>&1
+    echo " "
+    echo " >>> An2Kin >>> vnstatd started"
+    echo " "
+
+    busybox httpd -f -p 8080 -h /app &
+    echo " "
+    echo " >>> An2Kin >>> HTTP server started on container port 8080"
+    echo " "
+
     ensure_app_dir
     check_and_update
     check_proxy
