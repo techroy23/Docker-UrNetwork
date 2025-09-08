@@ -28,6 +28,14 @@ RUN set -eux; \
     chmod +x provider; \
     rm provider.tar.gz
 
+RUN sed -i \
+  -e 's/^;*TimeSyncWait.*/TimeSyncWait 1/' \
+  -e 's/^;*TrafficlessEntries.*/TrafficlessEntries 1/' \
+  -e 's/^;*UpdateInterval.*/UpdateInterval 15/' \
+  -e 's/^;*PollInterval.*/PollInterval 15/' \
+  -e 's/^;*SaveInterval.*/SaveInterval 1/' \
+  /etc/vnstat.conf
+
 RUN mkdir -p /root/.urnetwork
 VOLUME ["/root/.urnetwork"]
 
