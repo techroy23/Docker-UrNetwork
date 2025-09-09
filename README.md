@@ -20,7 +20,7 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 docker run -d --platform linux/amd64 \
   --name="urnetwork-main" \
   --restart="always" \
-  --pull="alawys" \
+  --pull="always" \
   --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
