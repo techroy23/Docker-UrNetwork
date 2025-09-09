@@ -33,7 +33,7 @@ docker run -d --platform linux/amd64 \
 docker run -d --platform linux/arm64 \
   --name="urnetwork-main" \
   --restart="always" \
-  --pull="alawys" \
+  --pull="always" \
   --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
