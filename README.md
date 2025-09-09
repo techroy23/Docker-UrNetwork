@@ -19,6 +19,8 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
   --name="urnetwork-main" \
+  --restart="always" \
+  --pull="alawys" \
   --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
@@ -30,6 +32,8 @@ docker run -d --platform linux/amd64 \
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
   --name="urnetwork-main" \
+  --restart="always" \
+  --pull="alawys" \
   --cap-add NET_ADMIN \
   -e USER_AUTH="Your-Email@here.com" \
   -e PASSWORD="YourPassword" \
@@ -37,26 +41,22 @@ docker run -d --platform linux/arm64 \
   -v vnstat_data:/var/lib/vnstat \
   -p 8080:8080 \
   ghcr.io/techroy23/docker-urnetwork:latest
-
-# (Optional) Mount a proxy configuration file from host to container.
-# Replace /path/to/your/proxy.txt with the absolute path on your host.
-# Inside the container it will appear at /app/proxy.txt for automatic detection.
-# Omit this line entirely if you don't want to use a proxy.
-
-## About `-v vnstat_data:/var/lib/vnstat` and `-p 8080:8080`
-
-# Stats JSON Portal = http://localhost:port/cgi-bin/stats
-
-# The `-v vnstat_data:/var/lib/vnstat` flag mounts a **named Docker volume** called `vnstat_data` to `/var/lib/vnstat` inside the container.  
-# `/var/lib/vnstat` is where vnstat stores its traffic database.  
-# Mounting it ensures your bandwidth history **persists** across container restarts or image updates.
-# - **If you run multiple containers**, each one needs its own separate vnstat database volume and port to avoid overwriting each other’s stats.  
-#   For example:
-#   -v vnstat_data1:/var/lib/vnstat  # for first container
-#   -p 9001:8080   # Host port 8081  # for first container
-#   -v vnstat_data2:/var/lib/vnstat  # for second container
-#   -p 9002:8080   # Host port 9000  # for second container
 ```
+
+- (Optional) Mount a proxy configuration file from host to container.
+- Replace `/path/to/your/proxy.txt` with the absolute path on your host.
+- Inside the container it will appear at `/app/proxy.txt` for automatic detection.
+- Omit this line entirely if you don't want to use a proxy.
+- Stats JSON Portal = http://localhost:port/cgi-bin/stats
+- About `-v vnstat_data:/var/lib/vnstat` and `-p 8080:8080`
+- The `-v vnstat_data:/var/lib/vnstat` flag mounts a **named Docker volume** called `vnstat_data` to `/var/lib/vnstat` inside the container. `/var/lib/vnstat` is where vnstat stores its traffic database.  
+- Mounting it ensures your bandwidth history **persists** across container restarts or image updates.
+- **If you run multiple containers**, each one needs its own separate vnstat database volume and port to avoid overwriting each other’s stats.  
+- For example:
+- `-v vnstat_data1:/var/lib/vnstat`  # for first container
+- `-p 9001:8080   # Host port 8081`  # for first container
+- `-v vnstat_data2:/var/lib/vnstat`  # for second container
+- `-p 9002:8080   # Host port 9000`  # for second container
 
 ## Promo Video
 <div align="center">
