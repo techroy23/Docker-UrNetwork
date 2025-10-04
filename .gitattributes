@@ -1,2 +1,2 @@
-*.docker linguist-language=Dockerfile
-Dockerfile linguist-language=Dockerfile
+*.sh linguist-detectable=false
+Dockerfile linguist-detectable=true
