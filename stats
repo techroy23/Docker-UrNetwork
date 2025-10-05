@@ -1,0 +1,24 @@
+#!/bin/sh
+echo "Content-type: application/json"
+echo ""
+vnstat --json d | jq '{
+  interfaces: [
+    .interfaces[]
+    | select(.name | test("^(lo|docker|br-|veth|tail|vir|zt)") | not)
+    | {
+        name,
+        total: {
+          rx: .traffic.total.rx,
+          tx: .traffic.total.tx
+        },
+        days: [
+          .traffic.day[] |
+          {
+            date: "\(.date.year)-\(.date.month)-\(.date.day)",
+            rx,
+            tx
+          }
+        ]
+      }
+  ]
+}'
