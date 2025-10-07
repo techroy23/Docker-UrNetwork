@@ -15,6 +15,7 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 |----------|-------------|-------------|
 | `EMAIL`  | Required    | Your Email. Container exits if not provided. |
 | `PASSWORD`  | Required    | Your Password. Container exits if not provided. |
+| `ENABLE_IP_CHECKER` | Optional | Boolean true/false : Checks and prints your public IPv4 address to stdout visible directly in Docker logs for easy monitoring. |
 | `-v /path/to/your/proxy.txt:/app/proxy.txt`  | Optional | Mount a proxy configuration file from host to container.<br>Omit this line entirely if you don't want to use a proxy.<br>The proxy inside the proxy.txt should have this format ip:port:username:password.<br>See the sample below. one proxy per line. |
 | | Optional | `123.456.789.012:55555:myproxyusername:myproxypassword`<br>`234.567.890.123:44444:myproxyusername:myproxypassword`<br>`345.678.901.234:33333:myproxyusername:myproxypassword`<br>`456.789.012.345:22222:myproxyusername:myproxypassword`<br>`567.890.123.456:11111:myproxyusername:myproxypassword` |
 | `-v vnstat_data:/var/lib/vnstat`<br>`-p 8080:8080` | Optional | Stats JSON Portal = `http://localhost:port/cgi-bin/stats` <br>Mounts a docker volume `vnstat_data` to `/var/lib/vnstat`. <br>Mounting it ensures data history persists across restarts or image updates. <br>Each instance needs its own volume and port to avoid overwriting each other’s data.<br>See the sample below. |
@@ -33,6 +34,7 @@ docker run -d --platform linux/amd64 \
   --log-opt max-file=3 \
   -e USER_AUTH="example@gmail.com" \
   -e PASSWORD="mYv3rYsEcUr3dP@sSw0rD" \
+  -e ENABLE_IP_CHECKER=false \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   -v vnstat_data:/var/lib/vnstat \
   -p 8080:8080 \
@@ -49,6 +51,7 @@ docker run -d --platform linux/arm64 \
   --log-opt max-file=3 \
   -e USER_AUTH="example@gmail.com" \
   -e PASSWORD="mYv3rYsEcUr3dP@sSw0rD" \
+  -e ENABLE_IP_CHECKER=false \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   -v vnstat_data:/var/lib/vnstat \
   -p 8080:8080 \

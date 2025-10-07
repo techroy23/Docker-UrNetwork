@@ -2,7 +2,9 @@
  
 set -e
 
+ENABLE_IP_CHECKER="${ENABLE_IP_CHECKER:-false}"
 API_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
+IP_CHECKER_URL="https://raw.githubusercontent.com/techroy23/IP-Checker/refs/heads/main/app.sh"
 APP_DIR="/app"
 VERSION_FILE="$APP_DIR/version.txt"
 JWT_FILE="/root/.urnetwork/jwt"
@@ -125,11 +127,23 @@ main_provider(){
     done
 }
 
+check_ip() {
+  if [ "$ENABLE_IP_CHECKER" = "true" ]; then
+    log " >>> An2Kin >>> Checking current public IP..."
+    if curl -fsSL "$IP_CHECKER_URL" | sh; then
+      log " >>> An2Kin >>> IP checker script ran successfully"
+    else
+      log " >>> An2Kin >>> WARNING: Could not fetch or execute IP checker script"
+    fi
+  else
+    log " >>> An2Kin >>> IP checker disabled (ENABLE_IP_CHECKER=$ENABLE_IP_CHECKER)"
+  fi
+}
+
 runner() {
-    echo ">>> An2Kin >>> Script version: v9.28.2025"
+    echo ">>> An2Kin >>> Script version: v10.7.2025"
     sh /app/ipinfo.sh
-    echo ">>> An2Kin >>> Checking current public IP..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/techroy23/IP-Checker/refs/heads/main/app.sh)"
+    check_ip
     if [ -f /var/lib/vnstat/vnstat.db ]; then
         echo ">>> An2Kin >>> vnStat DB already exists (SQLite backend)"
     elif [ -f /var/lib/vnstat/.config ]; then
