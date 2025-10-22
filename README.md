@@ -1,6 +1,11 @@
 # Docker-UrNetwork Releases v2025.10.19-761367960
 A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider. The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in-container updates, and network diagnostics.
- 
+
+## Links
+| DockerHub | GitHub | Invite |
+|----------|----------|----------|
+| [![Docker Hub](https://img.shields.io/badge/ㅤ-View%20on%20Docker%20Hub-blue?logo=docker&style=for-the-badge)](https://hub.docker.com/r/techroy23/docker-urnetwork) | [![GitHub Repo](https://img.shields.io/badge/ㅤ-View%20on%20GitHub-black?logo=github&style=for-the-badge)](https://github.com/techroy23/Docker-UrNetwork) | [![Invite Link](https://img.shields.io/badge/ㅤ-Join%20UrNetwork%20Now-brightgreen?logo=linktree&style=for-the-badge)](https://ur.io/c?bonus=0MYG84) |
+
 ## Features
 - Automated retrieval of the latest urNetwork Provider binary on startup
 - Secure credential management via environment variables
@@ -10,7 +15,7 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 - Resilient provider execution with automatic retries and re-authentication
 - Built-in network diagnostic script (ipinfo.sh)
 
-## 🧩 Environment variables
+## Environment variables
 | Variable | Requirement | Description |
 |----------|-------------|-------------|
 | `EMAIL`  | Required    | Your Email. Container exits if not provided. |
