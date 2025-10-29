@@ -45,7 +45,10 @@ check_and_update() {
         CURRENT_VERSION=""
     fi
     echo ">>> An2Kin >>> Current provider version: ${CURRENT_VERSION:-none}"
-    RELEASE_JSON="$(curl -sL "$API_URL")"
+    mkdir -p "$TMP_DIR"
+    RESP_FILE="$TMP_DIR/release.json"
+    HTTP_CODE="$(curl -sL -w '%{http_code}' -o "$RESP_FILE" "$API_URL")"
+    RELEASE_JSON="$(cat "$RESP_FILE")"
     DOWNLOAD_URL="$(printf '%s\n' "$RELEASE_JSON" \
       | grep '"browser_download_url"' \
       | grep '\.tar\.gz' \
@@ -53,7 +56,10 @@ check_and_update() {
       | head -n1)"
     [ -n "$DOWNLOAD_URL" ] || {
         echo ">>> An2Kin >>> No .tar.gz URL in GitHub response." >&2
-        return 1
+        echo ">>> An2Kin >>> HTTP status: $HTTP_CODE" >&2
+        echo ">>> An2Kin >>> Raw response:" >&2
+        echo "$RELEASE_JSON" | jq . >&2
+        return 0
     }
 
     LATEST_VERSION="$(printf '%s\n' "$DOWNLOAD_URL" \
@@ -141,7 +147,7 @@ check_ip() {
 }
 
 runner() {
-    echo ">>> An2Kin >>> Script version: v10.7.2025"
+    echo ">>> An2Kin >>> Script version: v10.30.2025"
     sh /app/ipinfo.sh
     check_ip
     if [ -f /var/lib/vnstat/vnstat.db ]; then
