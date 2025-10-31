@@ -1,4 +1,4 @@
-# Docker-UrNetwork Releases v2025.10.29-769618190
+# Docker-UrNetwork Releases v2025.10.30-770594050
 A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider. The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in-container updates, and network diagnostics.
 
 ## Links
