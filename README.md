@@ -30,15 +30,15 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 ```sh
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
-  --name="urnetwork" \
-  --restart="always" \
-  --pull="always" \
+  --name='urnetwork' \
+  --restart='always' \
+  --pull='always' \
   --privileged \
   --log-driver=json-file \
   --log-opt max-size=5m \
   --log-opt max-file=3 \
-  -e USER_AUTH="example@gmail.com" \
-  -e PASSWORD="mYv3rYsEcUr3dP@sSw0rD" \
+  -e USER_AUTH='example@gmail.com' \
+  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
   -e ENABLE_IP_CHECKER=false \                #optional
   -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
   -v vnstat_data:/var/lib/vnstat \            #optional
@@ -47,15 +47,15 @@ docker run -d --platform linux/amd64 \
 
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
-  --name="urnetwork" \
-  --restart="always" \
-  --pull="always" \
+  --name='urnetwork' \
+  --restart='always' \
+  --pull='always' \
   --privileged \
   --log-driver=json-file \
   --log-opt max-size=5m \
   --log-opt max-file=3 \
-  -e USER_AUTH="example@gmail.com" \
-  -e PASSWORD="mYv3rYsEcUr3dP@sSw0rD" \
+  -e USER_AUTH='example@gmail.com' \
+  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
   -e ENABLE_IP_CHECKER=false \                #optional
   -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
   -v vnstat_data:/var/lib/vnstat \            #optional
