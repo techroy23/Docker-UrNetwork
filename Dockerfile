@@ -17,7 +17,7 @@ RUN set -eux; \
     release_json="$(curl -sL https://api.github.com/repos/urnetwork/build/releases/latest)"; \
     tar_url="$(echo "$release_json" \
       | grep '"browser_download_url":' \
-      | grep '.tar.gz"' \
+      | grep 'urnetwork-provider-.*\.tar\.gz"' \
       | cut -d '"' -f 4)"; \
     echo "Downloading: $tar_url"; \
     wget -q "$tar_url" -O provider.tar.gz; \
