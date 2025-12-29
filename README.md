@@ -23,6 +23,7 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 | `ENABLE_IP_CHECKER` | Optional | Boolean true/false : Checks and prints your public IPv4 address to stdout visible directly in Docker logs for easy monitoring. |
 | `-v /path/to/your/proxy.txt:/app/proxy.txt`  | Optional | Mount a proxy configuration file from host to container.<br>Omit this line entirely if you don't want to use a proxy.<br>The proxy inside the proxy.txt should have this format ip:port:username:password.<br>See the sample below. one proxy per line. |
 | | Optional | `123.456.789.012:55555:myproxyusername:myproxypassword`<br>`234.567.890.123:44444:myproxyusername:myproxypassword`<br>`345.678.901.234:33333:myproxyusername:myproxypassword`<br>`456.789.012.345:22222:myproxyusername:myproxypassword`<br>`567.890.123.456:11111:myproxyusername:myproxypassword` |
+| `ENABLE_VNSTAT` | Optional | Boolean true/false : Default is True. |
 | `-v vnstat_data:/var/lib/vnstat`<br>`-p 8080:8080` | Optional | Stats JSON Portal = `http://localhost:port/cgi-bin/stats` <br>Mounts a docker volume `vnstat_data` to `/var/lib/vnstat`. <br>Mounting it ensures data history persists across restarts or image updates. <br>Each instance needs its own volume and port to avoid overwriting each other’s data.<br>See the sample below. |
 | | Optional | `-v vnstat_data1:/var/lib/vnstat`  # for first container <br>`-p 9001:8080   # Host port 9001`  # for first container <br>`-v vnstat_data2:/var/lib/vnstat`  # for second container <br>`-p 9002:8080   # Host port 9002`  # for second container |
 
@@ -41,6 +42,7 @@ docker run -d --platform linux/amd64 \
   -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
   -e ENABLE_IP_CHECKER=false \                #optional
   -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
+  -e ENABLE_VNSTAT=true \                     #optional
   -v vnstat_data:/var/lib/vnstat \            #optional
   -p 8080:8080 \                              #optional
   techroy23/docker-urnetwork:latest
@@ -58,6 +60,7 @@ docker run -d --platform linux/arm64 \
   -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
   -e ENABLE_IP_CHECKER=false \                #optional
   -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
+  -e ENABLE_VNSTAT=true \                     #optional
   -v vnstat_data:/var/lib/vnstat \            #optional
   -p 8080:8080 \                              #optional
   techroy23/docker-urnetwork:latest
