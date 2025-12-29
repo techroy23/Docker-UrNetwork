@@ -51,9 +51,10 @@ check_and_update() {
     RELEASE_JSON="$(cat "$RESP_FILE")"
     DOWNLOAD_URL="$(printf '%s\n' "$RELEASE_JSON" \
       | grep '"browser_download_url"' \
-      | grep '\.tar\.gz' \
+      | grep 'urnetwork-provider-.*\.tar\.gz' \
       | sed -E 's/.*"([^"]+)".*/\1/' \
       | head -n1)"
+      echo ">>> An2Kin >>> $DOWNLOAD_URL"
     [ -n "$DOWNLOAD_URL" ] || {
         echo ">>> An2Kin >>> No .tar.gz URL in GitHub response." >&2
         echo ">>> An2Kin >>> HTTP status: $HTTP_CODE" >&2
@@ -146,22 +147,33 @@ check_ip() {
   fi
 }
 
+ENABLE_VNSTAT="${ENABLE_VNSTAT:-true}"
+
+start_vnstat() {
+    VNSTAT_LC="$(printf '%s' "$ENABLE_VNSTAT" | tr '[:upper:]' '[:lower:]')"
+    if [ "$VNSTAT_LC" = "true" ]; then
+        if [ -f /var/lib/vnstat/vnstat.db ]; then
+            echo ">>> An2Kin >>> vnStat DB already exists (SQLite backend)"
+        elif [ -f /var/lib/vnstat/.config ]; then
+            echo ">>> An2Kin >>> vnStat DB already exists (binary backend)"
+        else
+            echo ">>> An2Kin >>> Initializing vnStat database"
+            vnstatd --initdb
+        fi
+        vnstatd -d --alwaysadd >/dev/null 2>&1
+        echo ">>> An2Kin >>> vnstatd started"
+        httpd -f -p 8080 -h /app &
+        echo ">>> An2Kin >>> HTTP server started on container port 8080"
+    else
+        echo ">>> An2Kin >>> VNSTAT disabled ..."
+    fi
+}
+
 runner() {
     echo ">>> An2Kin >>> Script version: v10.30.2025"
     sh /app/ipinfo.sh
     check_ip
-    if [ -f /var/lib/vnstat/vnstat.db ]; then
-        echo ">>> An2Kin >>> vnStat DB already exists (SQLite backend)"
-    elif [ -f /var/lib/vnstat/.config ]; then
-        echo ">>> An2Kin >>> vnStat DB already exists (binary backend)"
-    else
-        echo ">>> An2Kin >>> Initializing vnStat database"
-        vnstatd --initdb
-    fi
-    vnstatd -d --alwaysadd >/dev/null 2>&1
-    echo ">>> An2Kin >>> vnstatd started"
-    httpd -f -p 8080 -h /app &
-    echo ">>> An2Kin >>> HTTP server started on container port 8080"
+    start_vnstat
     ensure_app_dir
     check_and_update
     check_proxy
