@@ -170,7 +170,7 @@ start_vnstat() {
 }
 
 runner() {
-    echo ">>> An2Kin >>> Script version: v10.30.2025"
+    echo ">>> An2Kin >>> Script version: v12.30.2025"
     sh /app/ipinfo.sh
     check_ip
     start_vnstat
