@@ -78,6 +78,7 @@ check_and_update() {
         tar -xzf "$ARCHIVE" -C "$TMP_DIR" "linux/$URN_ARCH/provider" > /dev/null 2>&1
         mv "$TMP_DIR/linux/$URN_ARCH/provider" "$APP_DIR/provider"
         echo "$LATEST_VERSION" > "$VERSION_FILE"
+        rm -f "$ARCHIVE"
         echo ">>> An2Kin >>> Update provider complete"
     fi
 }
