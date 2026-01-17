@@ -2,23 +2,26 @@ services:
   urnetwork:
     image: techroy23/docker-urnetwork:latest
     container_name: urnetwork
-    platform: linux/amd64                         # linux/arm64
+    platform: linux/amd64
     restart: always
     privileged: true
     pull_policy: always
-    environment:
-      USER_AUTH: "example@gmail.com"              # Required
-      PASSWORD: "mYv3rYsEcUr3dP@sSw0rD"           # Required
-    #volumes:
-    #  - /path/to/your/proxy.txt:/app/proxy.txt   # Optional
-    #  - vnstat_data:/var/lib/vnstat              # Optional 
-    #ports:
-    #  - "8080:8080"                              # Optional
     logging:
       driver: json-file
       options:
         max-size: "5m"
         max-file: "3"
+    environment:
+      BUILD: stable
+      USER_AUTH: example@gmail.com
+      PASSWORD: mYv3rYsEcUr3dP@sSw0rD
+      ENABLE_IP_CHECKER: "false"
+      ENABLE_VNSTAT: "true"
+    volumes:
+      - /path/to/your/proxy.txt:/app/proxy.txt
+      - vnstat_data:/var/lib/vnstat
+    ports:
+      - "8080:8080"
 
-#volumes:                                         # Optional
-#  vnstat_data:                                   # Optional
+volumes:
+  vnstat_data:
