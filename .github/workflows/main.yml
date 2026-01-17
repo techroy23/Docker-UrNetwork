@@ -16,11 +16,27 @@ jobs:
     outputs:
       update_needed: ${{ steps.version_check.outputs.update_needed }}
       latest: ${{ steps.version_check.outputs.latest }}
+      stable_version: ${{ steps.get_stable_version.outputs.stable_version }}
+      nightly_version: ${{ steps.get_nightly_version.outputs.nightly_version }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
           persist-credentials: true
+
+      - name: Get Stable Version
+        id: get_stable_version
+        run: |
+          stable=$(curl -s https://api.github.com/repos/urnetwork/connect/releases/latest \
+            | jq -r '.name')
+          echo "stable_version=$stable" >> $GITHUB_OUTPUT
+
+      - name: Get Nightly Version
+        id: get_nightly_version
+        run: |
+          nightly=$(curl -s https://api.github.com/repos/urnetwork/build/releases/latest \
+            | jq -r '.name')
+          echo "nightly_version=$nightly" >> $GITHUB_OUTPUT
 
       - name: Fetch Latest Release Info
         id: version_check
@@ -47,11 +63,14 @@ jobs:
         if: steps.version_check.outputs.update_needed == 'true'
         run: echo "${{ steps.version_check.outputs.latest }}" > version.txt
 
-      - name: Update README.md version heading
+      - name: Update README.md Build section
         if: steps.version_check.outputs.update_needed == 'true'
         run: |
           sed -i \
-            "s|^# Docker-UrNetwork Releases v.*|# Docker-UrNetwork Releases v${{ steps.version_check.outputs.latest }}|" \
+            "s|^[-*][[:space:]]*UrNetwork_stable[[:space:]]v.*|- UrNetwork_stable ${{ steps.get_stable_version.outputs.stable_version }}|" \
+            README.md
+          sed -i \
+            "s|^[-*][[:space:]]*UrNetwork_nightly[[:space:]]v.*|- UrNetwork_nightly ${{ steps.get_nightly_version.outputs.nightly_version }}|" \
             README.md
 
       - name: Commit version.txt back to main
