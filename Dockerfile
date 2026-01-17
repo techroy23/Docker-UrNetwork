@@ -12,32 +12,19 @@ RUN apk update && apk add --no-cache \
     ca-certificates-bundle bash \
   && rm -rf /var/cache/apk/*
 
-# Use BuildKit secret mount to keep the token out of image layers
-RUN --mount=type=secret,id=gh_token \
-    set -eux; \
-    # read the secret (do NOT print it)
-    GH_TOKEN="$(cat /run/secrets/gh_token)"; \
+RUN set -eux; \
     download_api() { \
       repo="$1"; \
       suffix="$2"; \
       API="https://api.github.com/repos/urnetwork/${repo}/releases/latest"; \
-      # use authenticated requests to avoid rate limits
-      release_url=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" "$API" | jq -r '.url'); \
+      release_url=$(curl -s "$API" | jq -r '.url'); \
       echo "${suffix} release URL: $release_url"; \
-      release_json=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" "$release_url"); \
-      # if GitHub returned an error message, fail with it
-      if echo "$release_json" | jq -e 'has("message")' >/dev/null 2>&1; then \
-        echo "GitHub API error for ${repo}: $(echo "$release_json" | jq -r .message)"; \
-        exit 1; \
-      fi; \
+      release_json=$(curl -s "$release_url"); \
       download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .browser_download_url'); \
-      if [ -z "$download_url" ] || [ "$download_url" = "null" ]; then \
-        echo "No provider asset found for ${repo}"; \
-        exit 1; \
-      fi; \
       echo "Download URL: $download_url"; \
       filename=$(basename "$download_url"); \
-      curl -fSL -k -A "Mozilla/5.0" -o "$filename" "$download_url"; \
+      echo "Filename: $filename"; \
+      curl -L -k -A "Mozilla/5.0" -o "$filename" "$download_url"; \
       echo "Downloaded: $filename"; \
       echo "$filename $suffix" >> download_list.txt; \
     }; \
