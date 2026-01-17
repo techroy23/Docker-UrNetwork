@@ -2,8 +2,8 @@
 A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider. The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in-container updates, and network diagnostics.
 
 ## Build
-<br> UrNetwork_stable v
-<br> UrNetwork_nightly v
+- UrNetwork_stable v
+- UrNetwork_nightly v
 
 ## Links
 | DockerHub | GitHub | Invite |
