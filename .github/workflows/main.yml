@@ -127,9 +127,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/docker-urnetwork:latest
             docker.io/techroy23/docker-urnetwork:${{ steps.version_check.outputs.latest }}
             docker.io/techroy23/docker-urnetwork:latest
-          # preferred: pass as BuildKit secret (keeps token out of image layers)
           secrets: |
             id=gh_token,src=${{ secrets.GH_PAT }}
-          # fallback: pass token as build-arg in case secret mount is not available
           build-args: |
             GH_TOKEN=${{ secrets.GH_PAT }}
