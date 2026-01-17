@@ -1,7 +1,15 @@
 #!/bin/sh
-# Entry script for initializing and running the URNetwork provider container.
-# Includes setup for credentials, proxy, architecture detection, vnStat monitoring,
-# JWT authentication, and provider lifecycle management.
+# URNetwork Provider Entrypoint Script
+# ------------------------------------
+# This script bootstraps the URNetwork provider inside a container.
+# Responsibilities:
+#   - Validate environment and credentials
+#   - Configure proxy if provided
+#   - Detect system architecture
+#   - Optionally check public IP
+#   - Start vnStat monitoring and lightweight HTTP server
+#   - Authenticate and obtain JWT
+#   - Manage provider lifecycle (restart on crash)
 
 # Exit immediately if any command fails
 set -e
