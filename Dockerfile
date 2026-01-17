@@ -38,7 +38,9 @@ RUN --mount=type=secret,id=gh_token \
         echo "GitHub API error for ${repo}: $(echo "$release_json" | jq -r .message)"; \
         exit 1; \
       fi; \
-      download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith(\"urnetwork-provider-\")) | .browser_download_url'); \
+      echo "$release_json" | jq '.assets[].name' \
+      # download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith(\"urnetwork-provider-\")) | .browser_download_url'); \
+      download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .browser_download_url'); \
       if [ -z "$download_url" ] || [ "$download_url" = "null" ]; then \
         echo "No provider asset found for ${repo}"; \
         exit 1; \
