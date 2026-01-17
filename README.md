@@ -22,15 +22,15 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 ## Environment variables
 | Variable | Requirement | Description |
 |----------|-------------|-------------|
-| `-e BUILD='stable'`<br>`-e BUILD='nightly'` | Optional | **stable** The latest officially tested release. Prioritized for reliability and long-term use.<br><br>**nightly** The most recent development snapshot. Includes new features and fixes but may be unstable.<br><br>Default is **stable** |
+| `-e BUILD='stable'`<br />`-e BUILD='nightly'` | Optional | **stable** The latest officially tested release. Prioritized for reliability and long-term use.<br /><br />**nightly** The most recent development snapshot. Includes new features and fixes but may be unstable.<br /><br />Default is **stable** |
 | `-e USER_AUTH <EMAIL>`  | Required | Your Email. Container exits if not provided. |
 | `-e PASSWORD <PASSWORD>`  | Required | Your Password. Container exits if not provided. |
-| `-e ENABLE_IP_CHECKER` | Optional | Boolean true/false : Checks and prints your public IPv4 address to stdout visible directly in Docker logs for easy monitoring. |
-| `-v /path/to/your/proxy.txt:/app/proxy.txt`  | Optional | Mount a proxy configuration file from host to container.<br>Omit this line entirely if you don't want to use a proxy.<br>The proxy inside the proxy.txt should have this format ip:port:username:password.<br>See the sample below. one proxy per line. |
-| | Optional | `123.456.789.012:55555:myproxyusername:myproxypassword`<br>`234.567.890.123:44444:myproxyusername:myproxypassword`<br>`345.678.901.234:33333:myproxyusername:myproxypassword`<br>`456.789.012.345:22222:myproxyusername:myproxypassword`<br>`567.890.123.456:11111:myproxyusername:myproxypassword` |
-| `-e ENABLE_VNSTAT` | Optional | Boolean true/false : Default is True. |
-| `-v vnstat_data:/var/lib/vnstat`<br>`-p 8080:8080` | Optional | Stats JSON Portal = `http://localhost:port/cgi-bin/stats` <br>Mounts a docker volume `vnstat_data` to `/var/lib/vnstat`. <br>Mounting it ensures data history persists across restarts or image updates. <br>Each instance needs its own volume and port to avoid overwriting each other’s data.<br>See the sample below. |
-| | Optional | `-v vnstat_data1:/var/lib/vnstat`  # for first container <br>`-p 9001:8080   # Host port 9001`  # for first container <br>`-v vnstat_data2:/var/lib/vnstat`  # for second container <br>`-p 9002:8080   # Host port 9002`  # for second container |
+| `-e ENABLE_IP_CHECKER` | Optional | Boolean **true**/**false**<br /><br />Checks and prints your public IPv4 address to stdout visible directly in Docker logs for easy monitoring.<br /><br />Default is False.|
+| `-v /path/to/your/proxy.txt:/app/proxy.txt`  | Optional | Mount a proxy configuration file from host to container.<br />Omit this line entirely if you don't want to use a proxy.<br />The proxy inside the proxy.txt should have this format ip:port:username:password.<br />See the sample below. one proxy per line. |
+| | Optional | `123.456.789.012:55555:myproxyusername:myproxypassword`<br />`234.567.890.123:44444:myproxyusername:myproxypassword`<br />`345.678.901.234:33333:myproxyusername:myproxypassword`<br />`456.789.012.345:22222:myproxyusername:myproxypassword`<br />`567.890.123.456:11111:myproxyusername:myproxypassword` |
+| `-e ENABLE_VNSTAT` | Optional | Boolean **true**/**false**<br /><br />A lightweight tool that logs and reports network bandwidth usage.<br /><br />Default is True. |
+| `-v vnstat_data:/var/lib/vnstat`<br />`-p 8080:8080` | Optional | Stats JSON Portal = `http://localhost:port/cgi-bin/stats` <br />Mounts a docker volume `vnstat_data` to `/var/lib/vnstat`. <br />Mounting it ensures data history persists across restarts or image updates. <br />Each instance needs its own volume and port to avoid overwriting each other’s data.<br />See the sample below. |
+| | Optional | `-v vnstat_data1:/var/lib/vnstat`  # for first container <br />`-p 9001:8080   # Host port 9001`  # for first container <br />`-v vnstat_data2:/var/lib/vnstat`  # for second container <br />`-p 9002:8080   # Host port 9002`  # for second container |
 
 ## Run
 ```sh
@@ -43,14 +43,14 @@ docker run -d --platform linux/amd64 \
   --log-driver=json-file \
   --log-opt max-size=5m \
   --log-opt max-file=3 \
-  -e BUILD='stable' \                         #optional
-  -e USER_AUTH='example@gmail.com' \          #required
-  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \       #required
-  -e ENABLE_IP_CHECKER=false \                #optional
-  -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
-  -e ENABLE_VNSTAT=true \                     #optional
-  -v vnstat_data:/var/lib/vnstat \            #optional
-  -p 8080:8080 \                              #optional
+  -e BUILD='stable' \
+  -e USER_AUTH='example@gmail.com' \
+  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
+  -e ENABLE_IP_CHECKER=false \
+  -v /path/to/your/proxy.txt:/app/proxy.txt \
+  -e ENABLE_VNSTAT=true \
+  -v vnstat_data:/var/lib/vnstat \
+  -p 8080:8080 \
   techroy23/docker-urnetwork:latest
 
 # Option 2 : arm64 build
@@ -62,14 +62,14 @@ docker run -d --platform linux/arm64 \
   --log-driver=json-file \
   --log-opt max-size=5m \
   --log-opt max-file=3 \
-  -e BUILD='stable' \                         #optional
-  -e USER_AUTH='example@gmail.com' \          #required
-  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \       #required
-  -e ENABLE_IP_CHECKER=false \                #optional
-  -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
-  -e ENABLE_VNSTAT=true \                     #optional
-  -v vnstat_data:/var/lib/vnstat \            #optional
-  -p 8080:8080 \                              #optional
+  -e BUILD='stable' \
+  -e USER_AUTH='example@gmail.com' \
+  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
+  -e ENABLE_IP_CHECKER=false \
+  -v /path/to/your/proxy.txt:/app/proxy.txt \
+  -e ENABLE_VNSTAT=true \
+  -v vnstat_data:/var/lib/vnstat \
+  -p 8080:8080 \
   techroy23/docker-urnetwork:latest
 ```
 
