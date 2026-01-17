@@ -1,9 +1,6 @@
-# syntax=docker/dockerfile:1.4
-
 FROM alpine:latest
 
-ARG TARGETARCH
-ARG GH_TOKEN
+ARG TARGETARCH 
 
 WORKDIR /app
 
@@ -15,16 +12,11 @@ RUN apk update && apk add --no-cache \
     ca-certificates-bundle bash \
   && rm -rf /var/cache/apk/*
 
-# Use BuildKit secret mount to keep the token out of image layers.
-# Also accept GH_TOKEN as a build-arg fallback if the secret mount isn't available.
+# Use BuildKit secret mount to keep the token out of image layers
 RUN --mount=type=secret,id=gh_token \
     set -eux; \
-    # prefer secret mount, fallback to build-arg GH_TOKEN
-    GH_TOKEN="$(cat /run/secrets/gh_token 2>/dev/null || echo "$GH_TOKEN")"; \
-    if [ -z "$GH_TOKEN" ]; then \
-      echo "ERROR: No GitHub token provided. Provide either a BuildKit secret id=gh_token or set build-arg GH_TOKEN"; \
-      exit 1; \
-    fi; \
+    # read the secret (do NOT print it)
+    GH_TOKEN="$(cat /run/secrets/gh_token)"; \
     download_api() { \
       repo="$1"; \
       suffix="$2"; \
@@ -34,12 +26,10 @@ RUN --mount=type=secret,id=gh_token \
       echo "${suffix} release URL: $release_url"; \
       release_json=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" "$release_url"); \
       # if GitHub returned an error message, fail with it
-      if echo "$release_json" | jq -e 'has(\"message\")' >/dev/null 2>&1; then \
+      if echo "$release_json" | jq -e 'has("message")' >/dev/null 2>&1; then \
         echo "GitHub API error for ${repo}: $(echo "$release_json" | jq -r .message)"; \
         exit 1; \
       fi; \
-      echo "$release_json" | jq '.assets[].name'; \
-      # download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith(\"urnetwork-provider-\")) | .browser_download_url'); \
       download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .browser_download_url'); \
       if [ -z "$download_url" ] || [ "$download_url" = "null" ]; then \
         echo "No provider asset found for ${repo}"; \
