@@ -9,28 +9,47 @@ RUN apk update && apk add --no-cache \
     jq tar curl htop wget procps \
     iptables net-tools bind-tools \
     busybox-extras ca-certificates \
-    ca-certificates-bundle \
+    ca-certificates-bundle bash \
   && rm -rf /var/cache/apk/*
 
 RUN set -eux; \
-    echo "Fetching latest release…"; \
-    release_json="$(curl -sL https://api.github.com/repos/urnetwork/build/releases/latest)"; \
-    tar_url="$(echo "$release_json" \
-      | grep '"browser_download_url":' \
-      | grep 'urnetwork-provider-.*\.tar\.gz"' \
-      | cut -d '"' -f 4)"; \
-    echo "Downloading: $tar_url"; \
-    wget -q "$tar_url" -O provider.tar.gz; \
-    if [ "$TARGETARCH" = "amd64" ]; then \
-        BIN_TARGET=amd64; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-        BIN_TARGET=arm64; \
-    else \
-        echo "Unsupported architecture: $TARGETARCH" && exit 1; \
-    fi; \
-    tar -xzf provider.tar.gz --strip-components=2 "linux/$BIN_TARGET/provider"; \
-    chmod +x provider; \
-    rm provider.tar.gz
+    download_api() { \
+      repo="$1"; \
+      suffix="$2"; \
+      API="https://api.github.com/repos/urnetwork/${repo}/releases/latest"; \
+      release_url=$(curl -s "$API" | jq -r '.url'); \
+      echo "${suffix} release URL: $release_url"; \
+      release_json=$(curl -s "$release_url"); \
+      download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .browser_download_url'); \
+      echo "Download URL: $download_url"; \
+      filename=$(basename "$download_url"); \
+      echo "Filename: $filename"; \
+      curl -L -k -A "Mozilla/5.0" -o "$filename" "$download_url"; \
+      echo "Downloaded: $filename"; \
+      echo "$filename $suffix" >> download_list.txt; \
+    }; \
+    \
+    extract_providers() { \
+      filename="$1"; \
+      suffix="$2"; \
+      mkdir -p /app; \
+      tar --warning=no-unknown-keyword --extract --file="$filename" --strip-components=2 "linux/amd64/provider" -O > "/app/urnetwork_amd64_${suffix}"; \
+      chmod +x "/app/urnetwork_amd64_${suffix}"; \
+      echo "Extracted amd64 provider → /app/urnetwork_amd64_${suffix}"; \
+      tar --warning=no-unknown-keyword --extract --file="$filename" --strip-components=2 "linux/arm64/provider" -O > "/app/urnetwork_arm64_${suffix}"; \
+      chmod +x "/app/urnetwork_arm64_${suffix}"; \
+      echo "Extracted arm64 provider → /app/urnetwork_arm64_${suffix}"; \
+      rm -f "$filename"; \
+      echo "Deleted archive: $filename"; \
+    }; \
+    \
+    download_api "connect" "stable"; \
+    download_api "build" "nightly"; \
+    \
+    while read -r filename suffix; do \
+      extract_providers "$filename" "$suffix"; \
+    done < download_list.txt; \
+    rm -f download_list.txt
 
 RUN sed -i \
   -e 's/^;*TimeSyncWait.*/TimeSyncWait 1/' \
@@ -47,20 +66,12 @@ RUN mkdir -p /root/.urnetwork
 VOLUME ["/root/.urnetwork"]
 
 RUN mkdir -p /app/cgi-bin/
+
+COPY version.txt entrypoint.sh start_stable.sh start_nightly.sh urnetwork_ipinfo.sh /app/
 COPY stats /app/cgi-bin/
 
-COPY entrypoint.sh /entrypoint.sh
-COPY ipinfo.sh /app/ipinfo.sh
-COPY version.txt /app/version.txt
+RUN dos2unix /app/*.sh /app/cgi-bin/stats
 
-RUN dos2unix /entrypoint.sh
-RUN dos2unix /app/ipinfo.sh
-RUN dos2unix /app/cgi-bin/stats
+RUN chmod +x /app/*.sh /app/cgi-bin/stats
 
-RUN chmod +x /entrypoint.sh
-RUN chmod +x /app/ipinfo.sh
-RUN chmod +x /app/cgi-bin/stats
-
-ENTRYPOINT ["/entrypoint.sh"]
-
-CMD ["bash"]
+ENTRYPOINT ["/app/entrypoint.sh"]
