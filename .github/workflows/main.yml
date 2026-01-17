@@ -26,22 +26,28 @@ jobs:
 
       - name: Get Stable Version
         id: get_stable_version
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          stable=$(curl -s https://api.github.com/repos/urnetwork/connect/releases/latest \
+          stable=$(curl -s -H "Authorization: Bearer $GH_PAT" https://api.github.com/repos/urnetwork/connect/releases/latest \
             | jq -r '.name')
           echo "stable_version=$stable" >> $GITHUB_OUTPUT
 
       - name: Get Nightly Version
         id: get_nightly_version
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          nightly=$(curl -s https://api.github.com/repos/urnetwork/build/releases/latest \
+          nightly=$(curl -s -H "Authorization: Bearer $GH_PAT" https://api.github.com/repos/urnetwork/build/releases/latest \
             | jq -r '.name')
           echo "nightly_version=$nightly" >> $GITHUB_OUTPUT
 
       - name: Fetch Latest Release Info
         id: version_check
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          raw=$(curl -s https://api.github.com/repos/urnetwork/build/releases/latest \
+          raw=$(curl -s -H "Authorization: Bearer $GH_PAT" https://api.github.com/repos/urnetwork/build/releases/latest \
             | jq -r '.tag_name')
           latest=${raw#v}
           echo "latest=$latest" >> $GITHUB_OUTPUT
@@ -121,3 +127,6 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/docker-urnetwork:latest
             docker.io/techroy23/docker-urnetwork:${{ steps.version_check.outputs.latest }}
             docker.io/techroy23/docker-urnetwork:latest
+          # pass the repo secret into the build as id=gh_token (matches Dockerfile --mount id)
+          secrets: |
+            id=gh_token,src=${{ secrets.GH_PAT }}
