@@ -129,5 +129,3 @@ jobs:
             docker.io/techroy23/docker-urnetwork:latest
           secrets: |
             id=gh_token,src=${{ secrets.GH_PAT }}
-          build-args: |
-            GH_TOKEN=${{ secrets.GH_PAT }}
