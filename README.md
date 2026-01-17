@@ -1,5 +1,5 @@
 # Docker-UrNetwork
-A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider. The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in-container updates, and network diagnostics.
+A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider.  The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in‑container updates (nightly build), and network diagnostics.  
 
 ## Build
 - UrNetwork_stable v
@@ -11,19 +11,20 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 | [![Docker Hub](https://img.shields.io/badge/ㅤ-View%20on%20Docker%20Hub-blue?logo=docker&style=for-the-badge)](https://hub.docker.com/r/techroy23/docker-urnetwork) | [![GitHub Repo](https://img.shields.io/badge/ㅤ-View%20on%20GitHub-black?logo=github&style=for-the-badge)](https://github.com/techroy23/Docker-UrNetwork) | [![Invite Link](https://img.shields.io/badge/ㅤ-Join%20UrNetwork%20Now-brightgreen?logo=linktree&style=for-the-badge)](https://ur.io/c?bonus=0MYG84) |
 
 ## Features
-- Automated retrieval of the latest urNetwork Provider binary on startup
+- Automated retrieval of the latest urNetwork Provider binary on startup (nightly build)
+- Scheduled update watcher (default at 12:00 Asia/Manila) (nightly build)
 - Secure credential management via environment variables
 - Alpine-based image for minimal footprint
 - Persistent storage of authentication tokens and version metadata
-- Scheduled update watcher (default at 12:00 Asia/Manila)
 - Resilient provider execution with automatic retries and re-authentication
-- Built-in network diagnostic script (ipinfo.sh)
+- Built-in network diagnostic script (urnetwork_ipinfo.sh)
 
 ## Environment variables
 | Variable | Requirement | Description |
 |----------|-------------|-------------|
-| `-e USER_AUTH <EMAIL>`  | Required    | Your Email. Container exits if not provided. |
-| `-e PASSWORD <PASSWORD>`  | Required    | Your Password. Container exits if not provided. |
+| `-e BUILD='stable'`<br>`-e BUILD='nightly'` | Optional | **stable** The latest officially tested release. Prioritized for reliability and long-term use.<br><br>**nightly** The most recent development snapshot. Includes new features and fixes but may be unstable.<br><br>Default is **stable** |
+| `-e USER_AUTH <EMAIL>`  | Required | Your Email. Container exits if not provided. |
+| `-e PASSWORD <PASSWORD>`  | Required | Your Password. Container exits if not provided. |
 | `-e ENABLE_IP_CHECKER` | Optional | Boolean true/false : Checks and prints your public IPv4 address to stdout visible directly in Docker logs for easy monitoring. |
 | `-v /path/to/your/proxy.txt:/app/proxy.txt`  | Optional | Mount a proxy configuration file from host to container.<br>Omit this line entirely if you don't want to use a proxy.<br>The proxy inside the proxy.txt should have this format ip:port:username:password.<br>See the sample below. one proxy per line. |
 | | Optional | `123.456.789.012:55555:myproxyusername:myproxypassword`<br>`234.567.890.123:44444:myproxyusername:myproxypassword`<br>`345.678.901.234:33333:myproxyusername:myproxypassword`<br>`456.789.012.345:22222:myproxyusername:myproxypassword`<br>`567.890.123.456:11111:myproxyusername:myproxypassword` |
@@ -42,8 +43,9 @@ docker run -d --platform linux/amd64 \
   --log-driver=json-file \
   --log-opt max-size=5m \
   --log-opt max-file=3 \
-  -e USER_AUTH='example@gmail.com' \
-  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
+  -e BUILD='stable' \                         #optional
+  -e USER_AUTH='example@gmail.com' \          #required
+  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \       #required
   -e ENABLE_IP_CHECKER=false \                #optional
   -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
   -e ENABLE_VNSTAT=true \                     #optional
@@ -60,8 +62,9 @@ docker run -d --platform linux/arm64 \
   --log-driver=json-file \
   --log-opt max-size=5m \
   --log-opt max-file=3 \
-  -e USER_AUTH='example@gmail.com' \
-  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \
+  -e BUILD='stable' \                         #optional
+  -e USER_AUTH='example@gmail.com' \          #required
+  -e PASSWORD='mYv3rYsEcUr3dP@sSw0rD' \       #required
   -e ENABLE_IP_CHECKER=false \                #optional
   -v /path/to/your/proxy.txt:/app/proxy.txt \ #optional
   -e ENABLE_VNSTAT=true \                     #optional
