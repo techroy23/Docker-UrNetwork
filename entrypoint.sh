@@ -32,11 +32,11 @@ log ">>> An2Kin >>> Starting with $BUILD build"
 case "$BUILD" in
   stable)
     # Run the stable startup script
-    exec /start_stable.sh
+    exec /app/start_stable.sh
     ;;
   nightly)
     # Run the nightly startup script
-    exec /start_nightly.sh
+    exec /app/start_nightly.sh
     ;;
   *)
     # Handle invalid BUILD values
