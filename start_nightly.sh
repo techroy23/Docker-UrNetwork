@@ -167,7 +167,7 @@ func_do_login() {
     log "Removed existing JWT (if any)"
     log "Sleeping 15s before obtaining new JWT..."
     sleep 15
-    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
+    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
     log "Obtaining new JWT…"
     "$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f \
     || { log "auth failed" >&2; exit 1; }
@@ -181,7 +181,7 @@ func_start_provider(){
     failures=0
     while :; do
         log "Starting provider (attempt #$((failures+1)))"
-        PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
+        PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
 		BIN_VER="$($PROVIDER_BIN --version)"
 		log "Running UrNetwork build v${BIN_VER}"
         "$PROVIDER_BIN" provide
