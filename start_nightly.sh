@@ -207,10 +207,10 @@ func_start_provider(){
 # === Bootstrap Sequence ===
 func_bootstrap() {
     sh /app/urnetwork_ipinfo.sh
+	func_get_architecture
 	func_check_dir
 	func_check_credentials
 	func_check_proxy
-	func_get_architecture
     func_get_ip
     func_start_vnstat
 	func_check_update
