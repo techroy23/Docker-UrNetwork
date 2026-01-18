@@ -62,7 +62,8 @@ func_check_proxy() {
     rm -f ~/.urnetwork/proxy
     if [ -f "/app/proxy.txt" ]; then
         log "Proxy.txt found; adding proxy"
-        "$APP_DIR/provider" proxy add --proxy_file="/app/proxy.txt"
+		PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
+        "$PROVIDER_BIN" proxy add --proxy_file="/app/proxy.txt"
     else
         log "No proxy.txt found; skipping proxy add"
     fi
@@ -180,18 +181,18 @@ func_do_login() {
 func_start_provider(){
     failures=0
     while :; do
-        log "Starting provider (attempt #$((failures+1)))"
+        log "Starting UrNetwork (attempt #$((failures+1)))"
         PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
 		BIN_VER="$($PROVIDER_BIN --version)"
 		log "Running UrNetwork build v${BIN_VER}"
         "$PROVIDER_BIN" provide
         code=$?
         if [ "$code" -eq 0 ]; then
-            log "provider exited cleanly."
+            log "UrNetwork exited cleanly."
             break
         fi
         failures=$((failures+1))
-        log "provider crashed (#$failures; code=$code)"
+        log "UrNetwork crashed (#$failures; code=$code)"
         if [ "$failures" -ge 3 ]; then
             log "too many crashes; clearing JWT and reauthenticating"
             rm -f "$JWT_FILE"
@@ -220,11 +221,11 @@ func_bootstrap() {
             log "Watcher: hit $UPDATE_TIME, updating"
             func_check_update
             if ! ps aux | grep -q '[u]rnetwork_${A_SYS_ARCH}_'; then
-                log "Provider not running; launching now"
+                log "UrNetwork not running; launching now"
                 func_do_login
                 func_start_provider
             else
-                log "Provider already running; skipping restart"
+                log "UrNetwork already running; skipping restart"
             fi
             sleep 60
         fi
