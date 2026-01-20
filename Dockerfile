@@ -14,8 +14,9 @@ RUN apk update && apk add --no-cache \
 
 RUN mkdir -p /app/cgi-bin /root/.urnetwork
 
-COPY version.txt entrypoint.sh start_stable.sh start_nightly.sh start_jwt.sh urnetwork_ipinfo.sh start_update.sh /app/
-COPY stats /app/cgi-bin/
+# COPY version.txt entrypoint.sh start_stable.sh start_nightly.sh start_jwt.sh urnetwork_ipinfo.sh start_update.sh /app/
+COPY scripts/*.sh /app/
+COPY scripts/stats /app/cgi-bin/
 
 RUN dos2unix /app/*.sh /app/cgi-bin/stats && chmod +x /app/*.sh /app/cgi-bin/stats
 
