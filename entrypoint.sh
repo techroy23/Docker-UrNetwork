@@ -3,7 +3,7 @@ set -e
 # Entrypoint script for selecting and starting the build of UrNetwork.
 # 
 # Usage:
-#   BUILD=<stable|nightly> ./entrypoint.sh
+#   BUILD=<stable|nightly|jwt> ./entrypoint.sh
 #
 # Environment Variables:
 #   BUILD  - Determines which startup script to run. Defaults to "stable".
@@ -20,7 +20,7 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') $*"
 }
 
-log ">>> An2Kin >>> Script version: v1.17.2026"
+log ">>> An2Kin >>> Script version: v1.21.2026"
 
 # Default to "stable" if BUILD is not set
 BUILD="${BUILD:-stable}"
@@ -38,10 +38,19 @@ case "$BUILD" in
     # Run the nightly startup script
     exec /app/start_nightly.sh
     ;;
+  jwt)
+    # Run the jwt startup script
+    if [ "$#" -ne 1 ]; then
+      log ">>> An2Kin >>> ERROR: jwt mode requires exactly 1 argument (JWT token)"
+      exit 1
+    fi
+    JWT_TOKEN="$1"
+    exec /app/start_jwt.sh "$JWT_TOKEN"
+    ;;
   *)
     # Handle invalid BUILD values
     log ">>> An2Kin >>> Invalid build: $BUILD"
-    log ">>> An2Kin >>> Valid options are: stable, nightly"
+    log ">>> An2Kin >>> Valid options are: stable, nightly, jwt"
     exit 1
     ;;
 esac
