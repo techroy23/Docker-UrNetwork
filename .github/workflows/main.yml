@@ -84,10 +84,14 @@ jobs:
         run: |
           git config user.email "${{ secrets.GIT_USER_EMAIL }}"
           git config user.name "${{ secrets.GIT_USER_NAME }}"
-          git add version.txt README.md
-          git commit -m "Update version.txt to ${{ steps.version_check.outputs.latest }} [skip ci]"
-          git remote set-url origin https://techroy23:${{ secrets.GH_PAT }}@github.com/techroy23/Docker-UrNetwork.git
-          git push origin main
+          git add version.txt README.md || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Update version.txt to ${{ steps.version_check.outputs.latest }} [skip ci]"
+            git remote set-url origin https://techroy23:${{ secrets.GH_PAT }}@github.com/techroy23/Docker-UrNetwork.git
+            git push origin main
+          else
+            echo "No changes to commit, skipping git commit/push."
+          fi
 
       - name: Set up QEMU
         if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
