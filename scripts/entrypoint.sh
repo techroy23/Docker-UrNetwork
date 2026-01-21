@@ -44,6 +44,7 @@ case "$BUILD" in
       log ">>> An2Kin >>> ERROR: jwt mode requires exactly 1 argument (JWT token)"
       exit 1
     fi
+    log ">>> An2Kin >>> Entrypoint received $# arguments: $*"
     JWT_TOKEN="$1"
     exec /app/start_jwt.sh "$JWT_TOKEN"
     ;;

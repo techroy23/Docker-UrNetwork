@@ -133,12 +133,12 @@ func_bootstrap() {
     func_check_proxy
     func_get_ip
     func_start_vnstat
-    func_start_provider
+    func_start_provider "$@"
 }
 
 # === Main Entrypoint ===
 main() {
-    func_bootstrap
+    func_bootstrap "$@"
 }
 
 main "$@"
