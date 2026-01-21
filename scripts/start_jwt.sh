@@ -99,7 +99,7 @@ func_start_vnstat() {
 
 # === Provider Lifecycle Management ===
 func_start_provider(){
-    log ">>> An2Kin >>> func_start_provider received $# arguments: $*"
+    # log ">>> An2Kin >>> func_start_provider received $# arguments: $*"
     log "Starting UrNetwork ..."
     PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
     BIN_VER="$($PROVIDER_BIN --version)"
@@ -115,7 +115,7 @@ func_start_provider(){
     fi
 
     JWT_TOKEN="$1"
-    log "Checking $JWT_TOKEN"
+    # log "Checking $JWT_TOKEN"
     "$PROVIDER_BIN" auth-provide "$JWT_TOKEN"
     code=$?
 
@@ -128,7 +128,7 @@ func_start_provider(){
 
 # === Bootstrap Sequence ===
 func_bootstrap() {
-    log ">>> An2Kin >>> func_bootstrap received $# arguments: $*"
+    # log ">>> An2Kin >>> func_bootstrap received $# arguments: $*"
     sh /app/urnetwork_ipinfo.sh
 	func_get_architecture
 	func_check_dir
@@ -140,9 +140,9 @@ func_bootstrap() {
 
 # === Main Entrypoint ===
 main() {
-    log ">>> An2Kin >>> main received $# arguments: $*"
+    # log ">>> An2Kin >>> main received $# arguments: $*"
     func_bootstrap "$@"
 }
 
-log ">>> An2Kin >>> start_jwt.sh received $# arguments: $*"
+# log ">>> An2Kin >>> start_jwt.sh received $# arguments: $*"
 main "$@"
