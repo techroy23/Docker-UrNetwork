@@ -100,8 +100,6 @@ func_start_vnstat() {
 # === Provider Lifecycle Management ===
 func_start_provider(){
     log ">>> An2Kin >>> func_start_provider received $# arguments: $*"
-    log "Checking $1"
-    log "Checking $2"
     log "Starting UrNetwork ..."
     PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
     BIN_VER="$($PROVIDER_BIN --version)"
@@ -118,8 +116,7 @@ func_start_provider(){
 
     JWT_TOKEN="$1"
     log "Checking $JWT_TOKEN"
-    log "Checking ${JWT_TOKEN}"
-    "$PROVIDER_BIN" provide auth-provide "$JWT_TOKEN"
+    "$PROVIDER_BIN" auth-provide "$JWT_TOKEN"
     code=$?
 
     if [ "$code" -eq 0 ]; then
