@@ -39,7 +39,7 @@ func_check_dir() {
 # === Proxy Setup ===
 func_check_proxy() {
     log "Checking proxy configuration"
-    ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
+    # ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
     rm -f ~/.urnetwork/proxy
     if [ -f "/app/proxy.txt" ]; then
         log "proxy.txt found; adding proxy"
@@ -99,6 +99,7 @@ func_start_vnstat() {
 
 # === Provider Lifecycle Management ===
 func_start_provider(){
+    log ">>> An2Kin >>> func_start_provider received $# arguments: $*"
     log "Starting UrNetwork ..."
     PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
     BIN_VER="$($PROVIDER_BIN --version)"
@@ -127,6 +128,7 @@ func_start_provider(){
 
 # === Bootstrap Sequence ===
 func_bootstrap() {
+    log ">>> An2Kin >>> func_bootstrap received $# arguments: $*"
     sh /app/urnetwork_ipinfo.sh
 	func_get_architecture
 	func_check_dir
@@ -138,7 +140,9 @@ func_bootstrap() {
 
 # === Main Entrypoint ===
 main() {
+    log ">>> An2Kin >>> main received $# arguments: $*"
     func_bootstrap "$@"
 }
 
+log ">>> An2Kin >>> start_jwt.sh received $# arguments: $*"
 main "$@"

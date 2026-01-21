@@ -52,7 +52,7 @@ func_check_credentials() {
 # === Proxy Setup ===
 func_check_proxy() {
     log "Checking proxy configuration"
-    ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
+    # ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
     rm -f ~/.urnetwork/proxy
     if [ -f "/app/proxy.txt" ]; then
         log "proxy.txt found; adding proxy"
