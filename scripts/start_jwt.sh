@@ -1,15 +1,13 @@
+
 #!/bin/sh
 # URNetwork Provider Entrypoint Script
 # ------------------------------------
 # This script bootstraps the URNetwork provider inside a container.
 # Responsibilities:
-#   - Validate environment and credentials
 #   - Configure proxy if provided
 #   - Detect system architecture
 #   - Optionally check public IP
 #   - Start vnStat monitoring and lightweight HTTP server
-#   - Authenticate and obtain JWT
-#   - Manage provider lifecycle (restart on crash)
 
 # Exit immediately if any command fails
 set -e
@@ -38,25 +36,15 @@ func_check_dir() {
     }
 }
 
-# === Credential Validation ===
-func_check_credentials() {
-    if [ -z "$USER_AUTH" ] || [ -z "$PASSWORD" ]; then
-        log "ERROR: USER_AUTH or PASSWORD not set"
-        log "Please provide both -e USER_AUTH and -e PASSWORD"
-        exit 1
-    else
-        log "Credentials found"
-    fi
-}
-
 # === Proxy Setup ===
 func_check_proxy() {
     log "Checking proxy configuration"
-    ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
+    # ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
     rm -f ~/.urnetwork/proxy
     if [ -f "/app/proxy.txt" ]; then
         log "proxy.txt found; adding proxy"
-        "$APP_DIR/provider" proxy add --proxy_file="/app/proxy.txt"
+		PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
+        "$PROVIDER_BIN" proxy add --proxy_file="/app/proxy.txt"
     else
         log "No proxy.txt found; skipping proxy"
     fi
@@ -109,64 +97,52 @@ func_start_vnstat() {
     fi
 }
 
-# === Authentication (JWT) ===
-func_do_login() {
-    rm -f "$JWT_FILE"
-    log "Removed existing JWT (if any)"
-    log "Sleeping 15s before obtaining new JWT..."
-    sleep 15
-    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
-    log "Obtaining new JWT…"
-    "$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f \
-    || { log "auth failed" >&2; exit 1; }
-    sleep 5
-    [ -s "$JWT_FILE" ] || { log "no JWT file after auth" >&2; exit 1; }
-    log "obtained JWT"
-}
-
 # === Provider Lifecycle Management ===
 func_start_provider(){
-    failures=0
-    while :; do
-        log "Starting provider (attempt #$((failures+1)))"
-        PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
-		BIN_VER="$($PROVIDER_BIN --version)"
-		log "Running UrNetwork build v${BIN_VER}"
-        "$PROVIDER_BIN" provide
-        code=$?
-        if [ "$code" -eq 0 ]; then
-            log "provider exited cleanly."
-            break
-        fi
-        failures=$((failures+1))
-        log "provider crashed (#$failures; code=$code)"
-        if [ "$failures" -ge 3 ]; then
-            log "too many crashes; clearing JWT and reauthenticating"
-            rm -f "$JWT_FILE"
-            func_check_credentials
-            failures=0
-        fi
-        log "Waiting 60s before retry"
-        sleep 60
-    done
+    log ">>> An2Kin >>> func_start_provider received $# arguments: $*"
+    log "Starting UrNetwork ..."
+    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
+    BIN_VER="$($PROVIDER_BIN --version)"
+    log "Running UrNetwork build v${BIN_VER}"
+
+    if [ "$#" -eq 0 ]; then
+        log "No JWT token provided, showing help..."
+        "$PROVIDER_BIN" --help
+        return 1
+    elif [ "$#" -ne 1 ]; then
+        log "ERROR: Expected exactly 1 JWT token argument, got $#"
+        return 1
+    fi
+
+    JWT_TOKEN="$1"
+    log "Checking $JWT_TOKEN"
+    "$PROVIDER_BIN" auth-provide "$JWT_TOKEN"
+    code=$?
+
+    if [ "$code" -eq 0 ]; then
+        log "UrNetwork exited cleanly."
+    else
+        log "UrNetwork exited with code=$code"
+    fi
 }
 
 # === Bootstrap Sequence ===
 func_bootstrap() {
+    log ">>> An2Kin >>> func_bootstrap received $# arguments: $*"
     sh /app/urnetwork_ipinfo.sh
-	func_check_dir
-	func_check_credentials
-    func_check_proxy
 	func_get_architecture
+	func_check_dir
+    func_check_proxy
     func_get_ip
     func_start_vnstat
-    func_do_login
-    func_start_provider
+    func_start_provider "$@"
 }
 
 # === Main Entrypoint ===
 main() {
-    func_bootstrap
+    log ">>> An2Kin >>> main received $# arguments: $*"
+    func_bootstrap "$@"
 }
 
+log ">>> An2Kin >>> start_jwt.sh received $# arguments: $*"
 main "$@"
