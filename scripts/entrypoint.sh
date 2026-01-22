@@ -17,16 +17,16 @@ set -e
 
 # Simple logging function with timestamp
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') $*"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
-log ">>> An2Kin >>> Script version: v1.21.2026"
+log "Script version: v1.21.2026"
 
 # Default to "stable" if BUILD is not set
 BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
-log ">>> An2Kin >>> Starting with $BUILD build"
+log "Starting with $BUILD build"
 
 # Select startup script based on BUILD
 case "$BUILD" in

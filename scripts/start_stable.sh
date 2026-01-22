@@ -23,7 +23,7 @@ IP_CHECKER_URL="https://raw.githubusercontent.com/techroy23/IP-Checker/refs/head
 
 # === Logging Helper ===
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') >>> An2Kin >>> $*"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
 # === Directory Validation ===

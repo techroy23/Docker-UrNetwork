@@ -29,7 +29,7 @@ UPDATE_TIME="12:00"
 
 # === Logging Helper ===
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') >>> An2Kin >>> $*"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
 # === Directory Validation ===
