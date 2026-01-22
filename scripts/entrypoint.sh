@@ -15,17 +15,16 @@ set -e
 #   - Executes the appropriate startup script based on BUILD.
 #   - Exits with error if BUILD is invalid.
 
-# Simple logging function with timestamp
+# === Logging Helper ===
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
-
-log "Script version: v1.21.2026"
 
 # Default to "stable" if BUILD is not set
 BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
+log "Script version: v1.21.2026"
 log "Starting with $BUILD build"
 
 # Select startup script based on BUILD
