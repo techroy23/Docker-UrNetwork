@@ -1,5 +1,10 @@
 #!/bin/sh
- 
+
+# === Logging Helper ===
+log() {
+  echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
+}
+
 endpoint="https://api.bringyour.com/my-ip-info"
 response=$(curl -s "$endpoint")
 
@@ -12,14 +17,14 @@ relay=$(echo "$response" | jq -r '.info.privacy.relay')
 hosting=$(echo "$response" | jq -r '.info.privacy.hosting')
 service=$(echo "$response" | jq -r '.info.privacy.service')
 
-printf ">>> An2Kin >>> ### ### ### \n"
-printf ">>> An2Kin >>> API     : %s\n" "$endpoint"
-printf ">>> An2Kin >>> IP      : %s\n" "$ip"
-printf ">>> An2Kin >>> COUNTRY : %s\n" "$country"
-printf ">>> An2Kin >>> VPN     : %s\n" "$vpn"
-printf ">>> An2Kin >>> PROXY   : %s\n" "$proxy"
-printf ">>> An2Kin >>> TOR     : %s\n" "$tor"
-printf ">>> An2Kin >>> RELAY   : %s\n" "$relay"
-printf ">>> An2Kin >>> HOSTING : %s\n" "$hosting"
-printf ">>> An2Kin >>> SERVICE : %s\n" "$service"
-printf ">>> An2Kin >>> ### ### ### \n"
+log "### ### ###"
+log "API     : $endpoint"
+log "IP      : $ip"
+log "COUNTRY : $country"
+log "VPN     : $vpn"
+log "PROXY   : $proxy"
+log "TOR     : $tor"
+log "RELAY   : $relay"
+log "HOSTING : $hosting"
+log "SERVICE : $service"
+log "### ### ###"

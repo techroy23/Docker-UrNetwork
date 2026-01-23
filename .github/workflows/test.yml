@@ -20,6 +20,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
+          ref: test
           persist-credentials: true
 
       - name: Get Stable Version
@@ -131,3 +132,4 @@ jobs:
             docker.io/techroy23/docker-urnetwork:test-latest
           secrets: |
             id=gh_token,src=${{ secrets.GH_PAT }}
+
