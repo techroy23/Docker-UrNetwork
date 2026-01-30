@@ -114,15 +114,44 @@ func_start_vnstat() {
 func_do_login() {
     rm -f "$JWT_FILE"
     log "[INFO] Removed existing JWT (if any)"
-    log "[INFO] Sleeping 15s before obtaining new JWT..."
-    sleep 15
-    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
-    log "[INFO] Obtaining new JWT…"
-    "$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f \
-    || { log "[ERROR] Auth Failed" >&2; exit 1; }
-    sleep 5
-    [ -s "$JWT_FILE" ] || { log "no JWT file after auth" >&2; exit 1; }
-    log "[INFO] Obtained JWT"
+    
+    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
+    
+    # Retry loop for authentication
+    while true; do
+        log "[INFO] Sleeping 15s before obtaining new JWT..."
+        sleep 15
+        
+        log "[INFO] Attempting authentication..."
+        
+        # Capture auth command output for parsing
+        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1)
+        AUTH_EXIT_CODE=$?
+        
+        # Check for success message in output
+        if echo "$AUTH_OUTPUT" | grep -q "Jwt written to"; then
+            log "[INFO] Authentication successful - JWT written"
+            sleep 5
+            
+            # Verify JWT file exists as backup check
+            if [ -s "$JWT_FILE" ]; then
+                log "[INFO] JWT file verified at $JWT_FILE"
+                sleep 5
+                return 0
+            else
+                log "[WARN] Success message found but JWT file missing - retrying"
+                log "[INFO] Will retry authentication in 1 minutes (60 seconds)..."
+                sleep 60
+            fi
+        else
+            # Authentication failed - output exit code and auth output
+            log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
+            log "[ERROR] Command output: $AUTH_OUTPUT" >&2
+            
+            log "[INFO] Will retry authentication in 5 minutes (300 seconds)..."
+            sleep 300
+        fi
+    done
 }
 
 # === Provider Lifecycle Management ===
