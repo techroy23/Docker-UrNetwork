@@ -24,7 +24,7 @@ log() {
 BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
-log "Script version: v1.21.2026"
+log "Script version: v1.30.2026"
 log "Starting with $BUILD build"
 
 # Select startup script based on BUILD
