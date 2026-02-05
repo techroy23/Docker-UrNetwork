@@ -1,3 +1,8 @@
+# ⚠️ This version is deprecated ⚠️
+## Switch to the new [UrDashboard](https://github.com/techroy23/UrDashboard) for the latest features and updates!
+
+---
+
 # Docker-UrNetwork
 A minimal Docker setup that automatically fetches, updates, and runs the latest urNetwork Provider.  The container is built on **Alpine Linux**, ensuring a minimal footprint. Includes built-in authentication handling, resilient restarts, scheduled in‑container updates (nightly build), and network diagnostics.  
 
