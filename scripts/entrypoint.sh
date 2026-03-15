@@ -24,7 +24,7 @@ log() {
 BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
-log "Script version: v1.30.2026"
+log "Script version: v3.15.2026"
 log "Starting with $BUILD build"
 
 # Select startup script based on BUILD
@@ -40,17 +40,17 @@ case "$BUILD" in
   jwt)
     # Run the jwt startup script
     if [ "$#" -ne 1 ]; then
-      log ">>> An2Kin >>> ERROR: jwt mode requires exactly 1 argument (JWT token)"
+      log "ERROR: jwt mode requires exactly 1 argument (JWT token)"
       exit 1
     fi
-    log ">>> An2Kin >>> Entrypoint received $# arguments: $*"
+    log "Entrypoint received $# arguments: $*"
     JWT_TOKEN="$1"
     exec /app/start_jwt.sh "$JWT_TOKEN"
     ;;
   *)
     # Handle invalid BUILD values
-    log ">>> An2Kin >>> Invalid build: $BUILD"
-    log ">>> An2Kin >>> Valid options are: stable, nightly, jwt"
+    log "Invalid build: $BUILD"
+    log "Valid options are: stable, nightly, jwt"
     exit 1
     ;;
 esac
