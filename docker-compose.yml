@@ -13,8 +13,8 @@ services:
         max-file: "3"
     environment:
       BUILD: stable
-      USER_AUTH: example@gmail.com
-      PASSWORD: mYv3rYsEcUr3dP@sSw0rD
+      USER_AUTH: "example@gmail.com"
+      PASSWORD: "mYv3rYsEcUr3dP@sSw0rD"
       ENABLE_IP_CHECKER: "false"
       ENABLE_VNSTAT: "true"
     volumes:

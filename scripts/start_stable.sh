@@ -115,7 +115,7 @@ func_do_login() {
     rm -f "$JWT_FILE"
     log "[INFO] Removed existing JWT (if any)"
     
-    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
+    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
     
     # Retry loop for authentication
     while true; do
@@ -125,8 +125,15 @@ func_do_login() {
         log "[INFO] Attempting authentication..."
         
         # Capture auth command output for parsing
-        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1)
+        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1) || true
         AUTH_EXIT_CODE=$?
+        
+        if [ "${DEBUG:-false}" = "true" ]; then
+            echo "DEBUG: USER_AUTH=$USER_AUTH"
+            echo "DEBUG: PASSWORD=$PASSWORD"
+            echo "DEBUG: AUTH_EXIT_CODE=$AUTH_EXIT_CODE"
+            echo "DEBUG: AUTH_OUTPUT=$AUTH_OUTPUT"
+        fi
         
         # Check for success message in output
         if echo "$AUTH_OUTPUT" | grep -q "Jwt written to"; then
