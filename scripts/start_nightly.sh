@@ -177,13 +177,9 @@ func_do_login() {
         log "[INFO] Attempting authentication..."
         
         # Capture auth command output for parsing
-        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1) || true
+        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1)
         AUTH_EXIT_CODE=$?
-        
         PANIC_LINE=$(echo "$AUTH_OUTPUT" | grep -E '^panic:' || true)
-        if [ -n "$PANIC_LINE" ]; then
-            log "[ERROR] $PANIC_LINE"
-        fi
         
         if [ "${DEBUG:-false}" = "true" ]; then
             echo "DEBUG: USER_AUTH=$USER_AUTH"
@@ -210,8 +206,7 @@ func_do_login() {
         else
             # Authentication failed - output exit code and auth output
             log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
-            log "[ERROR] Command output: $AUTH_OUTPUT" >&2
-            
+			log "[ERROR] $(echo "$PANIC_LINE" | tr '[:lower:]' '[:upper:]')" >&2
             log "[INFO] Will retry authentication in 5 minutes (300 seconds)..."
             sleep 300
         fi
