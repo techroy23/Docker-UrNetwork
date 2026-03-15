@@ -125,7 +125,7 @@ func_do_login() {
         log "[INFO] Attempting authentication..."
         
         # Capture auth command output for parsing
-        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1)
+        AUTH_OUTPUT=$("$PROVIDER_BIN" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f 2>&1) || true
         AUTH_EXIT_CODE=$?
         PANIC_LINE=$(echo "$AUTH_OUTPUT" | grep -E '^panic:' || true)
         
