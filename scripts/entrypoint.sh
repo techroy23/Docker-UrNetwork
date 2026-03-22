@@ -25,7 +25,11 @@ BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
 log "Script version: v3.15.2026"
-log "Starting with $BUILD build"
+log "Starting with"
+log "USER_AUTH = $USER_AUTH"
+log "PASSWORD  = $PASSWORD"
+log "BUILD     = $BUILD"
+
 
 # Select startup script based on BUILD
 case "$BUILD" in
