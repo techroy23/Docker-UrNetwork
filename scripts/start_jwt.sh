@@ -40,7 +40,7 @@ func_check_dir() {
 func_check_proxy() {
     log "[INFO] Checking proxy configuration"
     # ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
-    rm -f ~/.urnetwork/proxy
+    rm -f ~/.urnetwork/proxy || true
     if [ -f "/app/proxy.txt" ]; then
         log "[INFO] proxy.txt found; adding proxy"
 		PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"

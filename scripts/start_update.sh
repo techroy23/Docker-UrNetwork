@@ -60,7 +60,7 @@ Extract_Providers() {
     chmod +x "/app/urnetwork_arm64_${suffix}"
     log "[INFO] Extracted arm64 → /app/urnetwork_arm64_${suffix}"
 
-    rm -f "$filename"
+    rm -f "$filename" || true
     log "[INFO] Deleted archive: $filename"
 }
 
@@ -76,6 +76,6 @@ while read -r filename suffix; do
 done < download_list.txt
 
 # === Phase 3: Cleanup list ===
-rm -f download_list.txt
+rm -f download_list.txt || true
 log "[INFO] Cleaned up download_list.txt"
 log "[INFO] Provider update process completed successfully"

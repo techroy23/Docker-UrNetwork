@@ -53,7 +53,7 @@ func_check_credentials() {
 func_check_proxy() {
     log "[INFO] Checking proxy configuration"
     # ls -la ~/.urnetwork/ 2>/dev/null || log "~/.urnetwork/ not found"
-    rm -f ~/.urnetwork/proxy
+    rm -f ~/.urnetwork/proxy || true
     if [ -f "/app/proxy.txt" ]; then
         log "[INFO] proxy.txt found; adding proxy"
 		PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
@@ -112,7 +112,7 @@ func_start_vnstat() {
 
 # === Authentication (JWT) ===
 func_do_login() {
-    rm -f "$JWT_FILE"
+    rm -f "$JWT_FILE" || true
     log "[INFO] Removed existing JWT (if any)"
     
     PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
@@ -179,7 +179,7 @@ func_start_provider(){
         log "[WARN] UrNetwork crashed (#$failures; code=$code)"
         if [ "$failures" -ge 3 ]; then
             log "[ERROR] Too many crashes; clearing JWT and reauthenticating"
-            rm -f "$JWT_FILE"
+            rm -f "$JWT_FILE" || true
             func_check_credentials
             failures=0
         fi
