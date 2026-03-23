@@ -24,35 +24,44 @@ log() {
 BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
-log "Script version: v3.15.2026"
+log "Script version: v3.23.2026"
 log "Starting with"
+log "*** *** *** *** *** *** *** *** *** ***"
 log "USER_AUTH = $USER_AUTH"
 log "PASSWORD  = $PASSWORD"
+log "AUTH-CODE = $AUTHCODE $JWT_TOKEN"
 log "BUILD     = $BUILD"
+log "PELICAN   = $PELICAN"
+log "*** *** *** *** *** *** *** *** *** ***"
 
+# === Helper to run as pelican if requested ===
+run_as_user() {
+  if [ "$PELICAN" = "yes" ]; then
+    log "Dropping privileges to pelican..."
+    exec gosu pelican "$@"
+  else
+    exec "$@"
+  fi
+}
 
 # Select startup script based on BUILD
 case "$BUILD" in
   stable)
-    # Run the stable startup script
-    exec /app/start_stable.sh
+    run_as_user /app/start_stable.sh
     ;;
   nightly)
-    # Run the nightly startup script
-    exec /app/start_nightly.sh
+    run_as_user /app/start_nightly.sh
     ;;
   jwt)
-    # Run the jwt startup script
     if [ "$#" -ne 1 ]; then
       log "ERROR: jwt mode requires exactly 1 argument (JWT token)"
       exit 1
     fi
     log "Entrypoint received $# arguments: $*"
     JWT_TOKEN="$1"
-    exec /app/start_jwt.sh "$JWT_TOKEN"
+    run_as_user /app/start_jwt.sh "$JWT_TOKEN"
     ;;
   *)
-    # Handle invalid BUILD values
     log "Invalid build: $BUILD"
     log "Valid options are: stable, nightly, jwt"
     exit 1

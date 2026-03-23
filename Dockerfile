@@ -10,11 +10,16 @@ RUN apk update && apk add --no-cache \
     iptables net-tools bind-tools \
     busybox-extras ca-certificates \
     ca-certificates-bundle bash \
+    gosu \
   && rm -rf /var/cache/apk/*
 
 RUN mkdir -p /app/cgi-bin /root/.urnetwork
 
-# COPY version.txt entrypoint.sh start_stable.sh start_nightly.sh start_jwt.sh urnetwork_ipinfo.sh start_update.sh /app/
+RUN addgroup -S pelican \
+    && adduser -S pelican -G pelican \
+    && chown -R root:pelican /app /root/.urnetwork \
+    && chmod -R 775 /app /root/.urnetwork
+
 COPY scripts/*.sh /app/
 COPY scripts/stats /app/cgi-bin/
 
