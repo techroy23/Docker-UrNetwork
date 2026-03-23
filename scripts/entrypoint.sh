@@ -44,7 +44,9 @@ run_as_user() {
       addgroup -g 1000 pelican
       adduser -D -u 1000 -G pelican pelican
       mkdir -p /home/pelican
-      log "Pelican user created"
+      chown -R root:pelican /app /root/.urnetwork
+      chmod -R 775 /app /root/.urnetwork
+      log "Pelican user created with proper permissions"
     else
       log "Pelican user already exists"
     fi
