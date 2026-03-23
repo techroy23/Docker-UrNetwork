@@ -37,8 +37,13 @@ log "*** *** *** *** *** *** *** *** *** ***"
 # === Helper to run as pelican if requested ===
 run_as_user() {
   if [ "$PELICAN" = "yes" ]; then
-    log "Dropping privileges to pelican (UID 1000:GID 1000)..."
-    exec gosu 1000:1000 "$@"
+    log "Dropping privileges to pelican..."
+    if gosu 999:999 id >/dev/null 2>&1; then
+      exec gosu 999:999 "$@"
+    else
+      log "WARN: gosu failed, running as root (Pelican may have restricted permissions)"
+      exec "$@"
+    fi
   else
     exec "$@"
   fi
