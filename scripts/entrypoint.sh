@@ -37,23 +37,8 @@ log "*** *** *** *** *** *** *** *** *** ***"
 # === Helper to run as pelican if requested ===
 run_as_user() {
   if [ "$PELICAN" = "yes" ]; then
-    log "Verifying pelican user..."
-
-    if ! grep -q "^pelican:" /etc/passwd 2>/dev/null; then
-      log "Pelican user not found in passwd, creating..."
-      echo "pelican:x:1000:1000:Pelican:/home/pelican:/bin/sh" >> /etc/passwd
-      echo "pelican:x:1000:" >> /etc/group
-      mkdir -p /home/pelican
-      chown -R root:pelican /app /root/.urnetwork
-      chmod -R 775 /app /root/.urnetwork
-      
-      log "Pelican user created with proper permissions"
-    else
-      log "Pelican user already exists"
-    fi
-
-    log "Dropping privileges to pelican..."
-    exec gosu pelican "$@"
+    log "Dropping privileges to pelican (UID 1000:GID 1000)..."
+    exec gosu 1000:1000 "$@"
   else
     exec "$@"
   fi
