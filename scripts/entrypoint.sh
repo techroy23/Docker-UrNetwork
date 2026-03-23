@@ -41,11 +41,12 @@ run_as_user() {
 
     if ! grep -q "^pelican:" /etc/passwd 2>/dev/null; then
       log "Pelican user not found in passwd, creating..."
-      addgroup -g 1000 pelican
-      adduser -D -u 1000 -G pelican pelican
+      echo "pelican:x:1000:1000:Pelican:/home/pelican:/bin/sh" >> /etc/passwd
+      echo "pelican:x:1000:" >> /etc/group
       mkdir -p /home/pelican
       chown -R root:pelican /app /root/.urnetwork
       chmod -R 775 /app /root/.urnetwork
+      
       log "Pelican user created with proper permissions"
     else
       log "Pelican user already exists"
