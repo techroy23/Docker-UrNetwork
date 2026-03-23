@@ -15,8 +15,8 @@ RUN apk update && apk add --no-cache \
 
 RUN mkdir -p /app/cgi-bin /root/.urnetwork
 
-RUN addgroup -S pelican \
-    && adduser -S pelican -G pelican \
+RUN addgroup -g 1000 pelican \
+    && adduser -D -u 1000 -G pelican pelican \
     && chown -R root:pelican /app /root/.urnetwork \
     && chmod -R 775 /app /root/.urnetwork
 
