@@ -25,14 +25,14 @@ BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
 log "Script version: v3.23.2026"
-log "Starting with"
-log "*** *** *** *** *** *** *** *** *** ***"
-log "USER_AUTH = $USER_AUTH"
-log "PASSWORD  = $PASSWORD"
-log "AUTH-CODE = $AUTHCODE $JWT_TOKEN"
-log "BUILD     = $BUILD"
-log "PELICAN   = $PELICAN"
-log "*** *** *** *** *** *** *** *** *** ***"
+#log "Starting with"
+#log "*** *** *** *** *** *** *** *** *** ***"
+#log "USER_AUTH = $USER_AUTH"
+#log "PASSWORD  = $PASSWORD"
+#log "AUTH-CODE = $AUTHCODE $JWT_TOKEN"
+#log "BUILD     = $BUILD"
+#log "PELICAN   = $PELICAN"
+#log "*** *** *** *** *** *** *** *** *** ***"
 
 # === Helper to run as pelican if requested ===
 run_as_pelican() {

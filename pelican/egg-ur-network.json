@@ -4,7 +4,7 @@
         "version": "PLCN_v3",
         "update_url": null
     },
-    "exported_at": "2026-03-23T04:53:02+00:00",
+    "exported_at": "2026-03-23T19:46:12+00:00",
     "name": "UrNetwork",
     "author": "villamor.leroy@gmail.com",
     "uuid": "f2631d05-7fc9-44cd-9641-d35a4156bd8d",
@@ -34,18 +34,38 @@
     },
     "variables": [
         {
-            "name": "AUTH-CODE",
-            "description": "Your authentication code.\nThe container will exit if not provided.\nGenerate one here: https://ur.io/",
+            "name": "AUTH_CODE",
+            "description": "Your authentication code. The container will exit if not provided. Generate one here: https://ur.io Make sure to set BUILD to jwt.",
             "env_variable": "AUTHCODE",
             "default_value": "",
             "user_viewable": false,
             "user_editable": false,
             "rules": [],
-            "sort": 3
+            "sort": 2
+        },
+        {
+            "name": "BUILD",
+            "description": "Default mode: stable. Available Options are (stable, nightly, jwt). **stable \u2013 Officially tested release, optimized for reliability and long-term use. **nightly \u2013 Latest development snapshot with new features and fixes, but may be unstable. **jwt \u2013 Alternative to user/pass login. Requires providing an AUTHCODE.",
+            "env_variable": "BUILD",
+            "default_value": "stable",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 1
+        },
+        {
+            "name": "DEBUG",
+            "description": "Default is false.",
+            "env_variable": "D_E_B_U_G",
+            "default_value": "false",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [],
+            "sort": 8
         },
         {
             "name": "ENABLE_IP_CHECKER",
-            "description": "Default is False.\n\nBoolean true/false\n\nChecks and prints your public IPv4 address to stdout visible directly in Docker logs for easy monitoring.",
+            "description": "Default is false.",
             "env_variable": "ENABLE_IP_CHECKER",
             "default_value": "false",
             "user_viewable": false,
@@ -55,7 +75,7 @@
         },
         {
             "name": "ENABLE_VNSTAT",
-            "description": "Boolean true/false\n\nA lightweight tool that logs and reports network bandwidth usage.",
+            "description": "Default is false.",
             "env_variable": "ENABLE_VNSTAT",
             "default_value": "false",
             "user_viewable": false,
@@ -71,7 +91,7 @@
             "user_viewable": false,
             "user_editable": false,
             "rules": [],
-            "sort": 2
+            "sort": 4
         },
         {
             "name": "PELICAN",
@@ -81,7 +101,7 @@
             "user_viewable": false,
             "user_editable": false,
             "rules": [],
-            "sort": 4
+            "sort": 7
         },
         {
             "name": "USER_AUTH ",
@@ -91,7 +111,7 @@
             "user_viewable": true,
             "user_editable": true,
             "rules": [],
-            "sort": 1
+            "sort": 3
         }
     ]
 }
