@@ -69,5 +69,5 @@ run_normal() {
 if [ "$PELICAN" = "yes" ]; then
   run_as_pelican
 else
-  run_normal
+  run_normal "$@"
 fi
