@@ -11,10 +11,6 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
-log "USER_AUTH=$USER_AUTH"
-log "PASSWORD=$PASSWORD"
-log "BUILD=$BUILD"
-
 # === Credential Validation ===
 func_check_credentials() {
     if [ -z "$USER_AUTH" ] || [ -z "$PASSWORD" ]; then

@@ -1,0 +1,97 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PLCN_v3",
+        "update_url": null
+    },
+    "exported_at": "2026-03-23T04:53:02+00:00",
+    "name": "UrNetwork",
+    "author": "villamor.leroy@gmail.com",
+    "uuid": "f2631d05-7fc9-44cd-9641-d35a4156bd8d",
+    "description": "A minimal Pelican Egg setup that automatically fetches, updates, and runs the latest urNetwork Provider.",
+    "image": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8bWFzayBpZD0ibWFzazBfMjk5XzI4NzYzIiBzdHlsZT0ibWFzay10eXBlOmFscGhhIiBtYXNrVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4PSIxNDMiIHk9IjE0NCIgd2lkdGg9IjczNyIgaGVpZ2h0PSI3MzYiPgo8cGF0aCBkPSJNODMzLjk4OSAzMjhDODA4LjU4NSAzMjggNzg3Ljk4OSAzMDcuNDA0IDc4Ny45ODkgMjgyQzc4Ny45ODkgMjU2LjU5NiA3NjcuMzkzIDIzNiA3NDEuOTg5IDIzNkM3MTYuNTg1IDIzNiA2OTUuOTg5IDIxNS40MDQgNjk1Ljk4OSAxOTBDNjk1Ljk4OSAxNjQuNTk2IDY3NS4zOTMgMTQ0IDY0OS45ODkgMTQ0SDM3My45ODlDMzQ4LjU4NSAxNDQgMzI3Ljk4OSAxNjQuNTk2IDMyNy45ODkgMTkwQzMyNy45ODkgMjE1LjQwNCAzMDcuMzkzIDIzNiAyODEuOTg5IDIzNkMyNTYuNTg1IDIzNiAyMzUuOTg5IDI1Ni41OTYgMjM1Ljk4OSAyODJDMjM1Ljk4OSAzMDcuNDA0IDIxNS4zOTMgMzI4IDE4OS45ODkgMzI4QzE2NC41ODUgMzI4IDE0My45ODkgMzQ4LjU5NiAxNDMuOTg5IDM3NFY2NTBDMTQzLjk4OSA2NzUuNDA0IDE2NC41ODUgNjk2IDE4OS45ODkgNjk2QzIxNS4zOTMgNjk2IDIzNS45ODkgNzE2LjU5NiAyMzUuOTg5IDc0MkMyMzUuOTg5IDc2Ny40MDQgMjU2LjU4NSA3ODggMjgxLjk4OSA3ODhDMzA3LjM5MyA3ODggMzI3Ljk4OSA4MDguNTk2IDMyNy45ODkgODM0QzMyNy45ODkgODU5LjQwNCAzNDguNTg1IDg4MCAzNzMuOTg5IDg4MEg2NDkuOTg5QzY3NS4zOTMgODgwIDY5NS45ODkgODU5LjQwNCA2OTUuOTg5IDgzNEM2OTUuOTg5IDgwOC41OTYgNzE2LjU4NSA3ODggNzQxLjk4OSA3ODhDNzY3LjM5MyA3ODggNzg3Ljk4OSA3NjcuNDA0IDc4Ny45ODkgNzQyQzc4Ny45ODkgNzE2LjU5NiA4MDguNTg1IDY5NiA4MzMuOTg5IDY5NkM4NTkuMzkzIDY5NiA4NzkuOTg5IDY3NS40MDQgODc5Ljk4OSA2NTBWMzc0Qzg3OS45ODkgMzQ4LjU5NiA4NTkuMzkzIDMyOCA4MzMuOTg5IDMyOFoiIGZpbGw9IiMwMDM5REUiLz4KPC9tYXNrPgo8ZyBtYXNrPSJ1cmwoI21hc2swXzI5OV8yODc2MykiPgo8Y2lyY2xlIGN4PSI3NDkiIGN5PSI0NTAiIHI9IjQwMCIgZmlsbD0iI0ZGNkM1OCIvPgo8Y2lyY2xlIGN4PSIzNDUuOTk2IiBjeT0iMzU0IiByPSI0MDAiIGZpbGw9IiNFRDhGRkYiLz4KPGNpcmNsZSBjeD0iMzc2Ljk5IiBjeT0iOTQ4IiByPSI0MDAiIGZpbGw9IiM4N0ZCNjciLz4KPGNpcmNsZSBjeD0iODcuOTg5MyIgY3k9IjU4MSIgcj0iNDAwIiBmaWxsPSIjRDZFNkY0Ii8+CjxjaXJjbGUgY3g9Ijc5My45OTMiIHI9IjQwMCIgZmlsbD0iI0VGRjdCQiIvPgo8L2c+Cjwvc3ZnPgo=",
+    "tags": [],
+    "features": [],
+    "docker_images": {
+        "Docker-UrNetwork": "techroy23/docker-urnetwork:latest"
+    },
+    "file_denylist": [],
+    "startup_commands": {
+        "Default": "sh /app/entrypoint.sh"
+    },
+    "config": {
+        "files": "{}",
+        "startup": "{\n    \"done\": \"Provider\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": null,
+            "container": "ghcr.io/pelican-eggs/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "AUTH-CODE",
+            "description": "Your authentication code.\nThe container will exit if not provided.\nGenerate one here: https://ur.io/",
+            "env_variable": "AUTHCODE",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [],
+            "sort": 3
+        },
+        {
+            "name": "ENABLE_IP_CHECKER",
+            "description": "Default is False.\n\nBoolean true/false\n\nChecks and prints your public IPv4 address to stdout visible directly in Docker logs for easy monitoring.",
+            "env_variable": "ENABLE_IP_CHECKER",
+            "default_value": "false",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [],
+            "sort": 5
+        },
+        {
+            "name": "ENABLE_VNSTAT",
+            "description": "Boolean true/false\n\nA lightweight tool that logs and reports network bandwidth usage.",
+            "env_variable": "ENABLE_VNSTAT",
+            "default_value": "false",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [],
+            "sort": 6
+        },
+        {
+            "name": "PASSWORD",
+            "description": "Your UrNetwork Password.",
+            "env_variable": "PASSWORD",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [],
+            "sort": 2
+        },
+        {
+            "name": "PELICAN",
+            "description": "PELICAN_FLAG",
+            "env_variable": "PELICAN",
+            "default_value": "yes",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [],
+            "sort": 4
+        },
+        {
+            "name": "USER_AUTH ",
+            "description": "Your UrNetwork Email/Phone.",
+            "env_variable": "USER_AUTH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 1
+        }
+    ]
+}
