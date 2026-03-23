@@ -110,8 +110,29 @@ func_start_provider(){
     done
 }
 
+func_start_provider_jwt(){
+    log "[INFO] Starting UrNetwork ..."
+    PROVIDER_BIN="$APP_DIR/urnetwork_${A_SYS_ARCH}_stable"
+    BIN_VER="$($PROVIDER_BIN --version)"
+    log "[INFO] Running UrNetwork build v${BIN_VER}"
+
+    "$PROVIDER_BIN" auth-provide "$AUTHCODE"
+    code=$?
+
+    if [ "$code" -eq 0 ]; then
+        log "[INFO] UrNetwork exited cleanly."
+    else
+        log "[ERROR] UrNetwork exited with code=$code"
+    fi
+}
+
 # Main
-func_get_architecture
-func_check_credentials
-func_do_login
-func_start_provider
+if [ "$BUILD" = "jwt" ]; then
+  func_get_architecture
+  func_start_provider_jwt
+else
+  func_get_architecture
+  func_check_credentials
+  func_do_login
+  func_start_provider
+fi
