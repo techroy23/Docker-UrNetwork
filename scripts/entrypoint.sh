@@ -37,6 +37,18 @@ log "*** *** *** *** *** *** *** *** *** ***"
 # === Helper to run as pelican if requested ===
 run_as_user() {
   if [ "$PELICAN" = "yes" ]; then
+    log "Verifying pelican user..."
+
+    if ! grep -q "^pelican:" /etc/passwd 2>/dev/null; then
+      log "Pelican user not found in passwd, creating..."
+      addgroup -g 1000 pelican
+      adduser -D -u 1000 -G pelican pelican
+      mkdir -p /home/pelican
+      log "Pelican user created"
+    else
+      log "Pelican user already exists"
+    fi
+
     log "Dropping privileges to pelican..."
     exec gosu pelican "$@"
   else
