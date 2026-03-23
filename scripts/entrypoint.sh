@@ -35,40 +35,39 @@ log "PELICAN   = $PELICAN"
 log "*** *** *** *** *** *** *** *** *** ***"
 
 # === Helper to run as pelican if requested ===
-run_as_user() {
-  if [ "$PELICAN" = "yes" ]; then
-    log "Dropping privileges to pelican..."
-    if gosu 999:999 id >/dev/null 2>&1; then
-      exec gosu 999:999 "$@"
-    else
-      log "WARN: gosu failed, running as root (Pelican may have restricted permissions)"
-      exec "$@"
-    fi
-  else
-    exec "$@"
-  fi
+run_as_pelican() {
+  log "Running Pelican Panel mode..."
+  exec /app/pelican_panel.sh
 }
 
-# Select startup script based on BUILD
-case "$BUILD" in
-  stable)
-    run_as_user /app/start_stable.sh
-    ;;
-  nightly)
-    run_as_user /app/start_nightly.sh
-    ;;
-  jwt)
-    if [ "$#" -ne 1 ]; then
-      log "ERROR: jwt mode requires exactly 1 argument (JWT token)"
+run_normal() {
+  case "$BUILD" in
+    stable)
+      exec /app/start_stable.sh
+      ;;
+    nightly)
+      exec /app/start_nightly.sh
+      ;;
+    jwt)
+      if [ "$#" -ne 1 ]; then
+        log "ERROR: jwt mode requires exactly 1 argument (JWT token)"
+        exit 1
+      fi
+      log "Entrypoint received $# arguments: $*"
+      JWT_TOKEN="$1"
+      exec /app/start_jwt.sh "$JWT_TOKEN"
+      ;;
+    *)
+      log "Invalid build: $BUILD"
+      log "Valid options are: stable, nightly, jwt"
       exit 1
-    fi
-    log "Entrypoint received $# arguments: $*"
-    JWT_TOKEN="$1"
-    run_as_user /app/start_jwt.sh "$JWT_TOKEN"
-    ;;
-  *)
-    log "Invalid build: $BUILD"
-    log "Valid options are: stable, nightly, jwt"
-    exit 1
-    ;;
-esac
+      ;;
+  esac
+}
+
+# Route based on PELICAN setting
+if [ "$PELICAN" = "yes" ]; then
+  run_as_pelican
+else
+  run_normal
+fi

@@ -5,6 +5,8 @@ echo "USER_AUTH=$USER_AUTH"
 echo "PASSWORD=$PASSWORD"
 echo "BUILD=$BUILD"
 
-sh start_update.sh
+ls /app/
+ls /home/
+whoami
 
 sleep 10000

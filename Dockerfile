@@ -15,14 +15,6 @@ RUN apk update && apk add --no-cache \
 
 RUN mkdir -p /app/cgi-bin /root/.urnetwork
 
-RUN addgroup -g 999 pelican \
-    && adduser -D -u 999 -G pelican pelican \
-    && echo "pelican:x:999:999:Pelican:/home/pelican:/bin/sh" >> /etc/passwd \
-    && echo "pelican:x:999:" >> /etc/group \
-    && mkdir -p /home/pelican \
-    && chown -R root:pelican /app /root/.urnetwork \
-    && chmod -R 775 /app /root/.urnetwork
-
 COPY scripts/*.sh /app/
 COPY scripts/stats /app/cgi-bin/
 
