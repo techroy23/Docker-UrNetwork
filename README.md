@@ -37,7 +37,7 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
   --name=urnetwork \
-  --cpus=0.25 --pull=always --restart=always \
+  --pull=always --restart=always \
   --log-driver=json-file --log-opt max-size=1m --log-opt max-file=1 \
   --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv4.ip_forward=1 \
   -e BUILD='stable' \
@@ -53,7 +53,7 @@ docker run -d --platform linux/amd64 \
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
   --name=urnetwork \
-  --cpus=0.25 --pull=always --restart=always \
+  --pull=always --restart=always \
   --log-driver=json-file --log-opt max-size=1m --log-opt max-file=1 \
   --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv4.ip_forward=1 \
   -e BUILD='stable' \
@@ -74,7 +74,7 @@ docker run -d --platform linux/arm64 \
 # Option 1 : amd64 build
 docker run -d --platform linux/amd64 \
   --name=urnetwork \
-  --cpus=0.25 --pull=always \
+  --pull=always \
   --log-driver=json-file --log-opt max-size=1m --log-opt max-file=1 \
   --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv4.ip_forward=1 \
   -e BUILD='jwt' \
@@ -88,7 +88,7 @@ docker run -d --platform linux/amd64 \
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
   --name=urnetwork \
-  --cpus=0.25 --pull=always \
+  --pull=always \
   --log-driver=json-file --log-opt max-size=1m --log-opt max-file=1 \
   --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv4.ip_forward=1 \
   -e BUILD='jwt' \
