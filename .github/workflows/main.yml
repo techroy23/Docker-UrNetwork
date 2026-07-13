@@ -38,8 +38,25 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          nightly=$(curl -s -H "Authorization: Bearer $GH_PAT" https://api.github.com/repos/urnetwork/build/releases/latest \
-            | jq -r '.name')
+          page=1
+          nightly=""
+          while [[ $page -le 10 ]]; do
+            releases=$(curl -s -H "Authorization: Bearer $GH_PAT" "https://api.github.com/repos/urnetwork/build/releases?page=$page&per_page=10")
+            count=$(echo "$releases" | jq 'length')
+            [[ "$count" -eq 0 ]] && break
+            i=0
+            while [[ $i -lt $count ]]; do
+              tag=$(echo "$releases" | jq -r ".[$i].tag_name")
+              url=$(echo "$releases" | jq -r ".[$i].url")
+              assets=$(curl -s -H "Authorization: Bearer $GH_PAT" "$url" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .name')
+              if [[ -n "$assets" ]]; then
+                nightly=$(echo "$releases" | jq -r ".[$i].name")
+                break 2
+              fi
+              i=$((i + 1))
+            done
+            page=$((page + 1))
+          done
           echo "nightly_version=$nightly" >> $GITHUB_OUTPUT
 
       - name: Fetch Latest Release Info
@@ -47,9 +64,25 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          raw=$(curl -s -H "Authorization: Bearer $GH_PAT" https://api.github.com/repos/urnetwork/build/releases/latest \
-            | jq -r '.tag_name')
-          latest=${raw#v}
+          page=1
+          latest=""
+          while [[ $page -le 10 ]]; do
+            releases=$(curl -s -H "Authorization: Bearer $GH_PAT" "https://api.github.com/repos/urnetwork/build/releases?page=$page&per_page=10")
+            count=$(echo "$releases" | jq 'length')
+            [[ "$count" -eq 0 ]] && break
+            i=0
+            while [[ $i -lt $count ]]; do
+              tag=$(echo "$releases" | jq -r ".[$i].tag_name")
+              url=$(echo "$releases" | jq -r ".[$i].url")
+              assets=$(curl -s -H "Authorization: Bearer $GH_PAT" "$url" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .name')
+              if [[ -n "$assets" ]]; then
+                latest=$(echo "$tag" | sed 's/^v//')
+                break 2
+              fi
+              i=$((i + 1))
+            done
+            page=$((page + 1))
+          done
           echo "latest=$latest" >> $GITHUB_OUTPUT
 
           if [[ -f version.txt ]]; then
