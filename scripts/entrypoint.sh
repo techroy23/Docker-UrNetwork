@@ -24,7 +24,7 @@ log() {
 BUILD="${BUILD:-stable}"
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
-log "Script version: v3.23.2026"
+log "Script version: v7.15.2026"
 #log "Starting with"
 #log "*** *** *** *** *** *** *** *** *** ***"
 #log "USER_AUTH = $USER_AUTH"
