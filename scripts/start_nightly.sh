@@ -22,7 +22,7 @@ JWT_FILE="/root/.urnetwork/jwt"
 ENABLE_VNSTAT="${ENABLE_VNSTAT:-true}"
 ENABLE_IP_CHECKER="${ENABLE_IP_CHECKER:-false}"
 IP_CHECKER_URL="https://raw.githubusercontent.com/techroy23/IP-Checker/refs/heads/main/app.sh"
-API_URL="https://api.github.com/repos/urnetwork/build/releases/latest"
+API_URL="https://api.github.com/repos/urnetwork/build/releases"
 VERSION_FILE="$APP_DIR/version.txt"
 TMP_DIR="/tmp/urn_update"
 UPDATE_TIME="12:00"
@@ -124,26 +124,46 @@ func_check_update() {
         CURRENT_VERSION=""
     fi
     log "[INFO] Current provider version: ${CURRENT_VERSION:-none}"
-    mkdir -p "$TMP_DIR"
-    RESP_FILE="$TMP_DIR/release.json"
-    HTTP_CODE="$(curl -sL -w '%{http_code}' -o "$RESP_FILE" "$API_URL")"
-    RELEASE_JSON="$(cat "$RESP_FILE")"
-    DOWNLOAD_URL="$(printf '%s\n' "$RELEASE_JSON" \
-      | grep '"browser_download_url"' \
-      | grep 'urnetwork-provider-.*\.tar\.gz' \
-      | sed -E 's/.*"([^"]+)".*/\1/' \
-      | head -n1)"
-      log "$DOWNLOAD_URL"
-    [ -n "$DOWNLOAD_URL" ] || {
-        log "[ERROR] No .tar.gz URL in GitHub response." >&2
-        log "[ERROR] HTTP status: $HTTP_CODE" >&2
-        log "[ERROR] Raw response:" >&2
-        log "$RELEASE_JSON" | jq . >&2
-        return 0
-    }
 
-    LATEST_VERSION="$(printf '%s\n' "$DOWNLOAD_URL" \
-      | sed -E 's#.*/download/v([^/]+)/.*#\1#')"
+    page=1
+    max_pages=10
+    download_url=""
+    tag_name=""
+
+    while [ $page -le $max_pages ]; do
+        releases_json=$(curl -s "$API_URL?page=$page&per_page=10")
+        count=$(echo "$releases_json" | jq 'length')
+
+        [ "$count" -eq 0 ] && break
+
+        i=0
+        while [ $i -lt $count ]; do
+            tag_name=$(echo "$releases_json" | jq -r ".[$i].tag_name")
+            release_url=$(echo "$releases_json" | jq -r ".[$i].url")
+
+            log "[INFO] Checking release: $tag_name"
+
+            release_json=$(curl -s "$release_url")
+            download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .browser_download_url')
+
+            if [ -n "$download_url" ]; then
+                log "[INFO] Found provider asset in $tag_name"
+                log "[INFO] Download URL: $download_url"
+                break 2
+            fi
+
+            i=$((i + 1))
+        done
+
+        page=$((page + 1))
+    done
+
+    if [ -z "$download_url" ]; then
+        log "[WARN] No urnetwork-provider-*.tar.gz found in any release"
+        return 0
+    fi
+
+    LATEST_VERSION=$(echo "$tag_name" | sed 's/^v//')
     log "[INFO] Latest provider version: $LATEST_VERSION"
     if [ "$LATEST_VERSION" = "$CURRENT_VERSION" ]; then
         log "[INFO] Already at latest provider version; skipping."
@@ -153,7 +173,7 @@ func_check_update() {
         pkill -x "urnetwork_${A_SYS_ARCH}_nightly" 2>/dev/null || log "No provider to kill"
         mkdir -p "$TMP_DIR"
         ARCHIVE="$TMP_DIR/urnetwork-provider_${LATEST_VERSION}.tar.gz"
-        curl -sL "$DOWNLOAD_URL" -o "$ARCHIVE"
+        curl -sL "$download_url" -o "$ARCHIVE"
         tar -xzf "$ARCHIVE" -C "$TMP_DIR" "linux/${A_SYS_ARCH}/provider" > /dev/null 2>&1
         mv "$TMP_DIR/linux/${A_SYS_ARCH}/provider" "$APP_DIR/urnetwork_${A_SYS_ARCH}_nightly"
         echo "$LATEST_VERSION" > "$VERSION_FILE"
