@@ -3,7 +3,7 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 
 ## Build
 - UrNetwork_stable v2026.3.23-895075980
-- UrNetwork_nightly v2026.9.26-1056759680
+- UrNetwork_nightly v2026.10.1-1060587890
 
 ## Links
 | DockerHub | GitHub | Invite |
