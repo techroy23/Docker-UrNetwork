@@ -1,73 +1,59 @@
 #!/bin/sh
 set -e
-# Entrypoint script for selecting and starting the build of UrNetwork.
-# 
+# Entrypoint bootstrapper for the UrNetwork provider container.
+#
 # Usage:
-#   BUILD=<stable|nightly|jwt> ./entrypoint.sh
+#   AUTH=<userpass|authcode> ./entrypoint.sh [<AUTH-CODE>]
 #
 # Environment Variables:
-#   BUILD  - Determines which startup script to run. Defaults to "stable".
-#              Accepted values: "stable", "nightly".
+#   AUTH       - Authentication mode. Defaults to "userpass".
+#                "userpass" : log in with USER_AUTH + PASSWORD (long running provider).
+#                "authcode" : exchange an auth code for a JWT (AUTHCODE or $1).
+#   AUTHCODE   - Auth code for AUTH=authcode (used when no argument is given).
 #
 # Behavior:
 #   - Logs timestamped messages for visibility.
-#   - Normalizes BUILD to lowercase.
-#   - Executes the appropriate startup script based on BUILD.
-#   - Exits with error if BUILD is invalid.
+#   - Normalizes AUTH to lowercase.
+#   - Executes the matching startup script.
+#   - Exits with an error if AUTH is invalid.
 
 # === Logging Helper ===
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
-# Default to "stable" if BUILD is not set
-BUILD="${BUILD:-stable}"
-BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
+log "Script version: v10.17.2026"
 
-log "Script version: v7.15.2026"
-#log "Starting with"
-#log "*** *** *** *** *** *** *** *** *** ***"
-#log "USER_AUTH = $USER_AUTH"
-#log "PASSWORD  = $PASSWORD"
-#log "AUTH-CODE = $AUTHCODE $JWT_TOKEN"
-#log "BUILD     = $BUILD"
-#log "PELICAN   = $PELICAN"
-#log "*** *** *** *** *** *** *** *** *** ***"
+# Default to "userpass" if AUTH is not set
+AUTH="${AUTH:-userpass}"
+AUTH="$(echo "$AUTH" | tr '[:upper:]' '[:lower:]')"
 
-# === Helper to run as pelican if requested ===
-run_as_pelican() {
-  log "Running Pelican Panel mode..."
-  exec /app/pelican_panel.sh
+# === Auth mode dispatch ===
+run_userpass() {
+  exec /app/start_userpass.sh
 }
 
-run_normal() {
-  case "$BUILD" in
-    stable)
-      exec /app/start_stable.sh
-      ;;
-    nightly)
-      exec /app/start_nightly.sh
-      ;;
-    jwt)
-      if [ "$#" -ne 1 ]; then
-        log "ERROR: jwt mode requires exactly 1 argument (JWT token)"
-        exit 1
-      fi
-      log "Entrypoint received $# arguments: $*"
-      JWT_TOKEN="$1"
-      exec /app/start_jwt.sh "$JWT_TOKEN"
-      ;;
-    *)
-      log "Invalid build: $BUILD"
-      log "Valid options are: stable, nightly, jwt"
-      exit 1
-      ;;
-  esac
+run_authcode() {
+  AUTH_CODE="${1:-$AUTHCODE}"
+  if [ -z "$AUTH_CODE" ]; then
+    log "[ERROR] AUTH=authcode requires an auth code"
+    log "[ERROR] Pass it as the first argument or set -e AUTHCODE"
+    exit 1
+  fi
+  log "Auth code provided"
+  exec /app/start_authcode.sh "$AUTH_CODE"
 }
 
-# Route based on PELICAN setting
-if [ "$PELICAN" = "yes" ]; then
-  run_as_pelican
-else
-  run_normal "$@"
-fi
+case "$AUTH" in
+  userpass)
+    run_userpass
+    ;;
+  authcode)
+    run_authcode "$@"
+    ;;
+  *)
+    log "[ERROR] Invalid auth mode: $AUTH"
+    log "[ERROR] Valid options are: userpass, authcode"
+    exit 1
+    ;;
+esac

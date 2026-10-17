@@ -1,6 +1,13 @@
 #!/bin/bash
 set -Eeuo pipefail
 
+# Image build helper: downloads the latest UrNetwork provider from the
+# urnetwork/build (nightly) releases and unpacks both architectures into /app.
+
+API_URL="https://api.github.com/repos/urnetwork/build/releases"
+MAX_PAGES=10
+SUFFIX="nightly"
+
 # === Logging Helper ===
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
@@ -11,26 +18,21 @@ trap 'log "[ERROR] Failure at line $LINENO in function $FUNCNAME"; exit 1' ERR
 
 log "[INFO] Starting provider update process"
 
-# === Function to download release tar.gz from GitHub API ===
-Download_API() {
-    local repo="$1"   # e.g. "connect" or "build"
-    local suffix="$2" # e.g. "stable" or "nightly"
-
-    log "[INFO] Download_API → Repo: $repo | Suffix: $suffix"
-
-    local API="https://api.github.com/repos/urnetwork/${repo}/releases"
+# === Find and download the latest release that ships the provider ===
+Download_Provider() {
     local page=1
-    local max_pages=10
+    local download_url=""
+    local tag_name=""
 
-    while [[ $page -le $max_pages ]]; do
+    while [[ $page -le $MAX_PAGES ]]; do
       local releases_json
-      releases_json=$(curl -s "$API?page=$page&per_page=10")
+      releases_json=$(curl -s "$API_URL?page=$page&per_page=10")
 
       local count
       count=$(echo "$releases_json" | jq 'length')
 
       if [[ "$count" -eq 0 ]]; then
-        log "[WARN] No more releases found for $repo after $page pages"
+        log "[WARN] No more releases found after $page pages"
         break
       fi
 
@@ -38,7 +40,6 @@ Download_API() {
       while [[ $i -lt $count ]]; do
         local release_url
         release_url=$(echo "$releases_json" | jq -r ".[$i].url")
-        local tag_name
         tag_name=$(echo "$releases_json" | jq -r ".[$i].tag_name")
 
         log "[INFO] Checking release: $tag_name"
@@ -46,24 +47,12 @@ Download_API() {
         local release_json
         release_json=$(curl -s "$release_url")
 
-        local download_url
         download_url=$(echo "$release_json" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .browser_download_url')
 
         if [[ -n "$download_url" ]]; then
           log "[INFO] Found provider asset in $tag_name"
-          log "[INFO] Release URL: $release_url"
           log "[INFO] Download URL: $download_url"
-
-          local filename
-          filename=$(basename "$download_url")
-          log "[INFO] Filename: $filename"
-
-          log "[INFO] Downloading $filename..."
-          curl -L -k -A "Mozilla/5.0" -o "$filename" "$download_url"
-          log "[INFO] Downloaded: $filename"
-
-          echo "$filename $suffix" >> download_list.txt
-          return 0
+          break 2
         fi
 
         i=$((i + 1))
@@ -72,11 +61,28 @@ Download_API() {
       page=$((page + 1))
     done
 
-    log "[WARN] No urnetwork-provider-*.tar.gz asset found in any $repo release"
-    return 1
+    if [[ -z "$download_url" ]]; then
+      log "[WARN] No urnetwork-provider-*.tar.gz asset found in any release"
+      return 1
+    fi
+
+    local filename
+    filename=$(basename "$download_url")
+    log "[INFO] Downloading $filename..."
+    curl -L -k -A "Mozilla/5.0" -o "$filename" "$download_url"
+    log "[INFO] Downloaded: $filename"
+
+    Extract_Providers "$filename" "$SUFFIX"
+    rm -f "$filename" || true
+    log "[INFO] Deleted archive: $filename"
+
+    # Record the version baked into the image so containers only download a
+    # new provider when a newer release actually exists.
+    printf '%s\n' "$(echo "$tag_name" | sed 's/^v//')" > /app/version.txt
+    log "[INFO] Recorded provider version in /app/version.txt"
 }
 
-# === Function to extract provider binaries from tar.gz ===
+# === Extract provider binaries from tar.gz ===
 Extract_Providers() {
     local filename="$1"
     local suffix="$2"
@@ -94,27 +100,7 @@ Extract_Providers() {
     tar --warning=no-unknown-keyword --extract --file="$filename" --strip-components=2 "linux/arm64/provider" -O > "/app/urnetwork_arm64_${suffix}"
     chmod +x "/app/urnetwork_arm64_${suffix}"
     log "[INFO] Extracted arm64 → /app/urnetwork_arm64_${suffix}"
-
-    rm -f "$filename" || true
-    log "[INFO] Deleted archive: $filename"
 }
 
-# === Phase 1: Download all ===
-log "[INFO] Phase 1: Download releases"
-Download_API "connect" "stable"
-Download_API "build" "nightly"
-
-# === Phase 2: Extract all ===
-log "[INFO] Phase 2: Extract providers"
-if [[ ! -f download_list.txt ]]; then
-  log "[WARN] No files downloaded, skipping extraction"
-else
-  while read -r filename suffix; do
-      Extract_Providers "$filename" "$suffix"
-  done < download_list.txt
-fi
-
-# === Phase 3: Cleanup list ===
-rm -f download_list.txt || true
-log "[INFO] Cleaned up download_list.txt"
+Download_Provider
 log "[INFO] Provider update process completed successfully"

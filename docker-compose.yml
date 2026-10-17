@@ -12,17 +12,20 @@ services:
         max-size: "5m"
         max-file: "3"
     environment:
-      BUILD: stable
+      AUTH: userpass
       USER_AUTH: "example@gmail.com"
       PASSWORD: "mYv3rYsEcUr3dP@sSw0rD"
-      ENABLE_IP_CHECKER: "false"
-      ENABLE_VNSTAT: "true"
+      PROVIDER_PORT: "8080"
+      ALL_OPERATORS: "N"
+      AUTO_REGISTER: "N"
+      ALLOW_CLIENT_REGISTRATION: "auto"
       DEBUG: "false"
     volumes:
       - /path/to/your/proxy.txt:/app/proxy.txt
-      - vnstat_data:/var/lib/vnstat
+      # Keep provider identity and credentials across container re-creates.
+      - urnetwork_data:/root/.urnetwork
     ports:
       - "8080:8080"
 
 volumes:
-  vnstat_data:
+  urnetwork_data:

@@ -21,7 +21,7 @@
     },
     "config": {
         "files": "{}",
-        "startup": "{\n    \"done\": \"Provider\"\n}",
+        "startup": "{\n    \"done\": \"Running UrNetwork build\"\n}",
         "logs": "{}",
         "stop": "^C"
     },
@@ -35,7 +35,7 @@
     "variables": [
         {
             "name": "AUTH_CODE",
-            "description": "Your authentication code. The container will exit if not provided. Generate one here: https://ur.io Make sure to set BUILD to jwt.",
+            "description": "Your authentication code. The container will exit if not provided. Generate one here: https://ur.io Make sure to set AUTH to authcode.",
             "env_variable": "AUTHCODE",
             "default_value": "",
             "user_viewable": false,
@@ -44,10 +44,10 @@
             "sort": 2
         },
         {
-            "name": "BUILD",
-            "description": "Default mode: stable. Available Options are (stable, nightly, jwt). **stable \u2013 Officially tested release, optimized for reliability and long-term use. **nightly \u2013 Latest development snapshot with new features and fixes, but may be unstable. **jwt \u2013 Alternative to user/pass login. Requires providing an AUTHCODE.",
-            "env_variable": "BUILD",
-            "default_value": "stable",
+            "name": "AUTH",
+            "description": "Default mode: userpass. Available Options are (userpass, authcode). **userpass \u2013 Log in with USER_AUTH and PASSWORD. **authcode \u2013 Alternative to user/pass login. Requires providing an AUTHCODE.",
+            "env_variable": "AUTH",
+            "default_value": "userpass",
             "user_viewable": true,
             "user_editable": true,
             "rules": [],
@@ -56,32 +56,12 @@
         {
             "name": "DEBUG",
             "description": "Default is false.",
-            "env_variable": "D_E_B_U_G",
+            "env_variable": "DEBUG",
             "default_value": "false",
             "user_viewable": false,
             "user_editable": false,
             "rules": [],
             "sort": 8
-        },
-        {
-            "name": "ENABLE_IP_CHECKER",
-            "description": "Default is false.",
-            "env_variable": "ENABLE_IP_CHECKER",
-            "default_value": "false",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": [],
-            "sort": 5
-        },
-        {
-            "name": "ENABLE_VNSTAT",
-            "description": "Default is false.",
-            "env_variable": "ENABLE_VNSTAT",
-            "default_value": "false",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": [],
-            "sort": 6
         },
         {
             "name": "PASSWORD",
@@ -94,16 +74,6 @@
             "sort": 4
         },
         {
-            "name": "PELICAN",
-            "description": "PELICAN_FLAG",
-            "env_variable": "PELICAN",
-            "default_value": "yes",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": [],
-            "sort": 7
-        },
-        {
             "name": "USER_AUTH ",
             "description": "Your UrNetwork Email/Phone.",
             "env_variable": "USER_AUTH",
@@ -112,6 +82,116 @@
             "user_editable": true,
             "rules": [],
             "sort": 3
+        },
+        {
+            "name": "PROVIDER_PORT",
+            "description": "Provider status JSON port (--port). Set 0 to disable. Default is 8080.",
+            "env_variable": "PROVIDER_PORT",
+            "default_value": "8080",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 9
+        },
+        {
+            "name": "ALLOW_CLIENT_REGISTRATION",
+            "description": "auto, Y or N. auto adds --allow-client-registration only when no provider identity exists. Set Y only for a genuinely new install. Default is auto.",
+            "env_variable": "ALLOW_CLIENT_REGISTRATION",
+            "default_value": "auto",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 10
+        },
+        {
+            "name": "ALL_OPERATORS",
+            "description": "Y or N. Y mines every operator in the published list, with a separate identity per operator. Default is N.",
+            "env_variable": "ALL_OPERATORS",
+            "default_value": "N",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 11
+        },
+        {
+            "name": "AUTO_REGISTER",
+            "description": "Y or N. Only used with ALL_OPERATORS=Y. Requires HOTKEY_SEED_FILE. Default is N.",
+            "env_variable": "AUTO_REGISTER",
+            "default_value": "N",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 12
+        },
+        {
+            "name": "HOTKEY_SEED_FILE",
+            "description": "Absolute path to an sr25519 hotkey seed file. Required when AUTO_REGISTER=Y.",
+            "env_variable": "HOTKEY_SEED_FILE",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 13
+        },
+        {
+            "name": "PROVIDER_ARGS",
+            "description": "Extra flags passed to provide, for example --adopt-legacy-provider-key. Default is empty.",
+            "env_variable": "PROVIDER_ARGS",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": true,
+            "rules": [],
+            "sort": 14
+        },
+        {
+            "name": "UPDATE_TIME",
+            "description": "Daily update time in UTC, HH:MM. Default is 00:00.",
+            "env_variable": "UPDATE_TIME",
+            "default_value": "00:00",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 15
+        },
+        {
+            "name": "API_URL",
+            "description": "Custom operator API URL. Must be set together with CONNECT_URL. Default is empty (public operator).",
+            "env_variable": "API_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 16
+        },
+        {
+            "name": "CONNECT_URL",
+            "description": "Custom operator connect URL. Must be set together with API_URL. Default is empty (public operator).",
+            "env_variable": "CONNECT_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 17
+        },
+        {
+            "name": "MAX_MEMORY",
+            "description": "Soft memory target passed as --max-memory, for example 1gib. Default is empty (size from host memory).",
+            "env_variable": "MAX_MEMORY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 18
+        },
+        {
+            "name": "VERBOSE",
+            "description": "Provider log verbosity: 0 off, 1 for -v, 2 for -vv. Default is 0.",
+            "env_variable": "VERBOSE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [],
+            "sort": 19
         }
     ]
 }
