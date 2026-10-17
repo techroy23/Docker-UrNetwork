@@ -10,134 +10,127 @@ on:
   repository_dispatch:
     types: [trigger-sub-build]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      update_needed: ${{ steps.version_check.outputs.update_needed }}
-      latest: ${{ steps.version_check.outputs.latest }}
-      stable_version: ${{ steps.get_stable_version.outputs.stable_version }}
-      nightly_version: ${{ steps.get_nightly_version.outputs.nightly_version }}
+      update_needed: ${{ steps.get_versions.outputs.update_needed }}
+      latest: ${{ steps.get_versions.outputs.latest }}
+      nightly_version: ${{ steps.get_versions.outputs.nightly }}
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: true
 
-      - name: Get Stable Version
-        id: get_stable_version
+      # The stable urnetwork/connect track is no longer published. Only the
+      # nightly urnetwork/build releases ship urnetwork-provider-* assets, so a
+      # single lookup now drives the version check, README and image tags.
+      - name: Detect Latest Nightly Version
+        id: get_versions
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          stable=$(curl -s -H "Authorization: Bearer $GH_PAT" https://api.github.com/repos/urnetwork/connect/releases/latest \
-            | jq -r '.name')
-          echo "stable_version=$stable" >> $GITHUB_OUTPUT
+          set -euo pipefail
 
-      - name: Get Nightly Version
-        id: get_nightly_version
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          page=1
-          nightly=""
-          while [[ $page -le 10 ]]; do
-            releases=$(curl -s -H "Authorization: Bearer $GH_PAT" "https://api.github.com/repos/urnetwork/build/releases?page=$page&per_page=10")
-            count=$(echo "$releases" | jq 'length')
-            [[ "$count" -eq 0 ]] && break
-            i=0
-            while [[ $i -lt $count ]]; do
-              tag=$(echo "$releases" | jq -r ".[$i].tag_name")
-              url=$(echo "$releases" | jq -r ".[$i].url")
-              assets=$(curl -s -H "Authorization: Bearer $GH_PAT" "$url" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .name')
-              if [[ -n "$assets" ]]; then
-                nightly=$(echo "$releases" | jq -r ".[$i].name")
-                break 2
-              fi
-              i=$((i + 1))
-            done
-            page=$((page + 1))
-          done
-          echo "nightly_version=$nightly" >> $GITHUB_OUTPUT
+          auth=()
+          if [[ -n "${GH_PAT:-}" ]]; then
+            auth=(-H "Authorization: Bearer ${GH_PAT}")
+          fi
 
-      - name: Fetch Latest Release Info
-        id: version_check
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          page=1
+          api="https://api.github.com/repos/urnetwork/build/releases"
           latest=""
-          while [[ $page -le 10 ]]; do
-            releases=$(curl -s -H "Authorization: Bearer $GH_PAT" "https://api.github.com/repos/urnetwork/build/releases?page=$page&per_page=10")
-            count=$(echo "$releases" | jq 'length')
-            [[ "$count" -eq 0 ]] && break
-            i=0
-            while [[ $i -lt $count ]]; do
-              tag=$(echo "$releases" | jq -r ".[$i].tag_name")
-              url=$(echo "$releases" | jq -r ".[$i].url")
-              assets=$(curl -s -H "Authorization: Bearer $GH_PAT" "$url" | jq -r '.assets[] | select(.name | startswith("urnetwork-provider-")) | .name')
-              if [[ -n "$assets" ]]; then
-                latest=$(echo "$tag" | sed 's/^v//')
-                break 2
-              fi
-              i=$((i + 1))
-            done
+          nightly=""
+          page=1
+          while [[ ${page} -le 10 ]]; do
+            if ! releases=$(curl -fsSL "${auth[@]}" "${api}?page=${page}&per_page=10"); then
+              echo "::warning::GitHub API request failed for ${api}?page=${page}"
+              break
+            fi
+
+            count=$(jq 'if type == "array" then length else 0 end' <<<"${releases}")
+            if [[ ${count} -eq 0 ]]; then
+              break
+            fi
+
+            # The release list already embeds its assets, so no per-release call is needed.
+            match=$(jq -r '[.[] | select(any(.assets[]?; .name | startswith("urnetwork-provider-")))]
+                           | first
+                           | [(.tag_name // ""), (.name // .tag_name // "")] | @tsv' <<<"${releases}")
+            if [[ -n "${match}" ]]; then
+              tag=${match%%$'\t'*}
+              nightly=${match#*$'\t'}
+              latest=${tag#v}
+              break
+            fi
             page=$((page + 1))
           done
-          echo "latest=$latest" >> $GITHUB_OUTPUT
+
+          if [[ -z "${latest}" ]]; then
+            echo "::warning::No urnetwork/build release with urnetwork-provider-* assets found; skipping image build."
+          elif [[ ! "${latest}" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::warning::Ignoring unusable release tag '${latest}'; skipping image build."
+            latest=""
+          fi
 
           if [[ -f version.txt ]]; then
-            stored=$(<version.txt)
+            stored=$(tr -d '[:space:]' < version.txt)
           else
             stored=""
           fi
-          echo "stored=$stored" >> $GITHUB_OUTPUT
 
-          if [[ "$latest" != "$stored" ]]; then
-            echo "update_needed=true" >> $GITHUB_OUTPUT
-          else
-            echo "update_needed=false" >> $GITHUB_OUTPUT
-          fi
+          {
+            echo "latest=${latest}"
+            echo "nightly=${nightly}"
+            echo "stored=${stored}"
+            if [[ -n "${latest}" && "${latest}" != "${stored}" ]]; then
+              echo "update_needed=true"
+            else
+              echo "update_needed=false"
+            fi
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update version.txt
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
-        run: echo "${{ steps.version_check.outputs.latest }}" > version.txt
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
+        run: echo "${{ steps.get_versions.outputs.latest }}" > version.txt
 
       - name: Update README.md Build section
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
         run: |
           sed -i \
-            "s|^[-*][[:space:]]*UrNetwork_stable[[:space:]]v.*|- UrNetwork_stable ${{ steps.get_stable_version.outputs.stable_version }}|" \
-            README.md
-          sed -i \
-            "s|^[-*][[:space:]]*UrNetwork_nightly[[:space:]]v.*|- UrNetwork_nightly ${{ steps.get_nightly_version.outputs.nightly_version }}|" \
+            "s|^[-*][[:space:]]*UrNetwork_nightly[[:space:]]v.*|- UrNetwork_nightly ${{ steps.get_versions.outputs.nightly }}|" \
             README.md
 
-      - name: Commit version.txt back to main
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
+      - name: Commit version.txt back to the branch
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
         run: |
           git config user.email "${{ secrets.GIT_USER_EMAIL }}"
           git config user.name "${{ secrets.GIT_USER_NAME }}"
           git add version.txt README.md || true
-          if ! git diff --cached --quiet; then
-            git commit -m "Update version.txt to ${{ steps.version_check.outputs.latest }} [skip ci]"
-            git remote set-url origin https://techroy23:${{ secrets.GH_PAT }}@github.com/techroy23/Docker-UrNetwork.git
-            git push origin main
-          else
+          if git diff --cached --quiet; then
             echo "No changes to commit, skipping git commit/push."
+            exit 0
           fi
+          git commit -m "Update version.txt to ${{ steps.get_versions.outputs.latest }} [skip ci]"
+          git remote set-url origin "https://${{ github.actor }}:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git"
+          git push origin "HEAD:${{ github.ref_name }}"
 
       - name: Set up QEMU
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 
       - name: Set Up Docker Buildx
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -145,7 +138,7 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Log in to Docker Hub
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
         uses: docker/login-action@v3
         with:
           registry: docker.io
@@ -153,16 +146,16 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build and push image to GHCR & Docker Hub
-        if: steps.version_check.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.get_versions.outputs.latest != '' && (steps.get_versions.outputs.update_needed == 'true' || github.event_name == 'workflow_dispatch')
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/docker-urnetwork:${{ steps.version_check.outputs.latest }}
+            ghcr.io/${{ github.repository_owner }}/docker-urnetwork:${{ steps.get_versions.outputs.latest }}
             ghcr.io/${{ github.repository_owner }}/docker-urnetwork:latest
-            docker.io/techroy23/docker-urnetwork:${{ steps.version_check.outputs.latest }}
+            docker.io/techroy23/docker-urnetwork:${{ steps.get_versions.outputs.latest }}
             docker.io/techroy23/docker-urnetwork:latest
           secrets: |
             id=gh_token,src=${{ secrets.GH_PAT }}
