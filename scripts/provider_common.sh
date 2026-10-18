@@ -13,6 +13,7 @@ APP_DIR="/app"
 STATE_DIR="${HOME:-/root}/.urnetwork"
 JWT_FILE="$STATE_DIR/jwt"
 PROVIDER_LOG="/tmp/urnetwork-provider.log"
+PROVIDER_LOG_TAIL_LINES="${PROVIDER_LOG_TAIL_LINES:-10}"
 UPDATE_FLAG="/tmp/urnetwork-update-requested"
 RELEASES_API_URL="https://api.github.com/repos/urnetwork/build/releases"
 VERSION_FILE="$APP_DIR/version.txt"
@@ -37,6 +38,39 @@ JWT_SKEW_SECONDS="${JWT_SKEW_SECONDS:-300}"
 # === Logging Helper ===
 log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
+}
+
+# === Provider Log Helpers ===
+# Each provider attempt gets a brand new log file. A rejection left over from
+# an earlier attempt must never be mistaken for one from the current attempt,
+# otherwise the restart logic re-authenticates forever without the provider
+# ever running.
+func_reset_provider_log() {
+    rm -f "$PROVIDER_LOG" 2>/dev/null || true
+    : > "$PROVIDER_LOG" 2>/dev/null || true
+}
+
+# Print the tail of the provider log with the usual timestamped prefix so the
+# failing lines are visible in the container logs.
+func_show_provider_log_tail() {
+    lines="${1:-$PROVIDER_LOG_TAIL_LINES}"
+    if [ -s "$PROVIDER_LOG" ]; then
+        log "[DEBUG] Last $lines lines of $PROVIDER_LOG:"
+        tail -n "$lines" "$PROVIDER_LOG" 2>/dev/null | while IFS= read -r line; do
+            log "[DEBUG]   $line"
+        done
+    else
+        log "[DEBUG] $PROVIDER_LOG is empty"
+    fi
+}
+
+# The rejection itself can be older than the tail window (the provider keeps
+# logging while it shuts down), so print the matching lines explicitly too.
+func_show_provider_log_rejection() {
+    grep -nE 'jwt rejected by the api|"event":"rejected"' "$PROVIDER_LOG" 2>/dev/null \
+        | tail -n 5 | while IFS= read -r line; do
+            log "[DEBUG]   match: $line"
+        done
 }
 
 # === Endpoint Validation ===
@@ -260,6 +294,16 @@ func_build_provider_flags() {
 }
 
 # === Authentication ===
+# Drop the account token and the quarantine marker the provider writes for a
+# rejected sign-in (.provider.jwt.rejected = "blocked"). While that marker
+# exists the provider exits without signing in, so re-authenticating alone
+# never recovers. The provider key, certificate and .provider.jwt are kept, so
+# the identity and payout wallet are untouched.
+func_clear_auth_state() {
+    rm -f "$JWT_FILE"
+    rm -f "$STATE_DIR/.provider.jwt.rejected" 2>/dev/null || true
+}
+
 func_login_userpass_once() {
     # AUTH_FLAGS is intentionally unquoted to pass each flag separately.
     if AUTH_OUTPUT=$("$APP_DIR/$PROVIDER_NAME" auth --user_auth="$USER_AUTH" --password="$PASSWORD" -f $AUTH_FLAGS 2>&1); then
@@ -329,6 +373,7 @@ func_login_authcode() {
             return 0
         fi
         log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
+        log "[WARN] Auth codes are single use; if this one was already exchanged, restart the container with a fresh AUTHCODE" >&2
         log "[INFO] Will retry authentication in 5 minutes (300 seconds)"
         sleep 300
     done
@@ -484,6 +529,9 @@ func_start_provider() {
     reauths=0
 
     while :; do
+        # Never let output from an earlier run (a rejection in particular)
+        # influence this attempt's restart decision.
+        func_reset_provider_log
         func_ensure_auth
 
         # Apply a pending daily update even if the provider was already down.
@@ -500,7 +548,7 @@ func_start_provider() {
         [ -n "$PROVIDER_FLAGS" ] && log "[INFO] Provider flags:$PROVIDER_FLAGS"
 
         started_at="$(date +%s)"
-        : > "$PROVIDER_LOG"
+        func_reset_provider_log
         tail -n +1 -f "$PROVIDER_LOG" &
         tail_pid=$!
 
@@ -525,7 +573,9 @@ func_start_provider() {
         if grep -qE 'jwt rejected by the api|"event":"rejected"' "$PROVIDER_LOG" 2>/dev/null; then
             rejections=$((rejections+1))
             log "[WARN] Provider rejected the stored token; clearing it and re-authenticating (#$rejections)"
-            rm -f "$JWT_FILE"
+            func_show_provider_log_rejection
+            func_show_provider_log_tail "$PROVIDER_LOG_TAIL_LINES"
+            func_clear_auth_state
             if [ "$rejections" -ge 3 ]; then
                 log "[ERROR] Token rejected repeatedly; waiting 5 minutes"
                 rejections=0
@@ -534,6 +584,12 @@ func_start_provider() {
                 sleep 10
             fi
             continue
+        fi
+
+        # A long healthy run resets the rejection streak so a transient
+        # rejection hours ago cannot escalate later restarts.
+        if [ "$uptime" -ge 300 ]; then
+            rejections=0
         fi
 
         if [ "$code" -eq 0 ] && [ "$uptime" -ge 60 ]; then
@@ -551,12 +607,13 @@ func_start_provider() {
         if [ "$uptime" -lt 20 ]; then
             quick_failures=$((quick_failures+1))
             log "[WARN] UrNetwork stopped after ${uptime}s (startup failure #$quick_failures)"
+            func_show_provider_log_tail "$PROVIDER_LOG_TAIL_LINES"
             if [ "$quick_failures" -ge 2 ]; then
                 quick_failures=0
                 if [ "$reauths" -lt 5 ]; then
                     reauths=$((reauths+1))
                     log "[WARN] Clearing JWT and reauthenticating (re-auth #$reauths)"
-                    rm -f "$JWT_FILE"
+                    func_clear_auth_state
                     sleep 10
                 else
                     log "[ERROR] Repeated startup failures; waiting 5 minutes"
@@ -571,7 +628,7 @@ func_start_provider() {
         log "[WARN] UrNetwork stopped unexpectedly (code=$code, uptime=${uptime}s, attempt #$failures)"
         if [ "$failures" -ge 3 ]; then
             log "[ERROR] Too many failures; clearing JWT and reauthenticating"
-            rm -f "$JWT_FILE"
+            func_clear_auth_state
             failures=0
             sleep 30
         fi
