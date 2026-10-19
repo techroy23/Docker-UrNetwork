@@ -501,21 +501,10 @@ func_start_update_watcher() {
         exit 1
         ;;
     esac
-    (
-      last_day=""
-      while :; do
-        now="$(date -u +%H:%M)"
-        day="$(date -u +%Y-%m-%d)"
-        if [ "$now" = "$UPDATE_TIME" ] && [ "$last_day" != "$day" ]; then
-            last_day="$day"
-            log "[INFO] Watcher: update time $UPDATE_TIME UTC reached"
-            : > "$UPDATE_FLAG"
-            pkill -f "$APP_DIR/$PROVIDER_NAME" 2>/dev/null || log "[INFO] Watcher: no provider process to stop"
-            sleep 90
-        fi
-        sleep 20
-      done
-    ) &
+    # Run the watcher from its own script. A plain `( ... ) &` subshell keeps
+    # the parent's argv, so `ps` shows the same start_authcode.sh /
+    # start_userpass.sh command line twice and it looks like a double start.
+    /bin/sh "$APP_DIR/update_watcher.sh" "$UPDATE_TIME" "$PROVIDER_NAME" "$UPDATE_FLAG" &
     WATCHER_PID=$!
     log "[INFO] Daily update watcher PID $WATCHER_PID (at $UPDATE_TIME UTC)"
 }
