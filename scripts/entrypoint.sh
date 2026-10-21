@@ -25,7 +25,7 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
-log "Script version: v10.17.2026"
+log "Script version: v10.21.2026"
 
 # The provider resolves its state directory from HOME.
 export HOME=/home/urnetwork
