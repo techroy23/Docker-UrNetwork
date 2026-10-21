@@ -12,7 +12,14 @@ RUN apk update && apk add --no-cache \
     gosu \
   && rm -rf /var/cache/apk/*
 
-RUN mkdir -p /root/.urnetwork
+# The container runs entirely as this unprivileged user. Its state lives in
+# its own home directory, not in /root.
+RUN addgroup -g 1000 urnetwork \
+ && adduser -D -u 1000 -G urnetwork -h /home/urnetwork -s /sbin/nologin urnetwork
+
+RUN mkdir -p /home/urnetwork/.urnetwork \
+ && chown -R urnetwork:urnetwork /home/urnetwork \
+ && chmod 700 /home/urnetwork /home/urnetwork/.urnetwork
 
 COPY scripts/*.sh /app/
 
@@ -20,7 +27,14 @@ RUN dos2unix /app/*.sh && chmod +x /app/*.sh
 
 RUN /app/start_update.sh
 
-VOLUME ["/root/.urnetwork"]
+# The provider replaces its own binary in /app during daily updates, so the
+# runtime user owns that directory too.
+RUN chown -R urnetwork:urnetwork /app
+
+ENV HOME=/home/urnetwork
+USER urnetwork
+
+VOLUME ["/home/urnetwork/.urnetwork"]
 
 EXPOSE 8080
 

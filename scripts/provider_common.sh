@@ -10,8 +10,9 @@
 # authcode, AUTH_CODE before calling func_bootstrap.
 
 APP_DIR="/app"
-STATE_DIR="${HOME:-/root}/.urnetwork"
+STATE_DIR="${HOME:-/home/urnetwork}/.urnetwork"
 JWT_FILE="$STATE_DIR/jwt"
+PROVIDER_JWT_FILE="$STATE_DIR/.provider.jwt"
 PROVIDER_LOG="/tmp/urnetwork-provider.log"
 PROVIDER_LOG_TAIL_LINES="${PROVIDER_LOG_TAIL_LINES:-10}"
 UPDATE_FLAG="/tmp/urnetwork-update-requested"
@@ -137,7 +138,70 @@ func_get_architecture() {
 }
 
 # === Directory Validation ===
+# The provider refuses to create its registration or write the JWT when the
+# state directory is owned by another user or writable by group/other:
+#
+#   panic: registration parent must be owned and not writable by other users
+#
+# A named volume created by this image inherits the ownership and mode of
+# /home/urnetwork/.urnetwork. A bind mount keeps whatever the host has, so a
+# `chmod 777` source fails authentication even though the mode allows writes.
+# Normalise the state directory here so `-v` and `--mount`, volume and bind,
+# all behave the same.
+func_state_dir_is_safe() {
+    STATE_OWNER="$(stat -c '%u' "$STATE_DIR" 2>/dev/null || echo '')"
+    STATE_MODE="$(stat -c '%a' "$STATE_DIR" 2>/dev/null || echo '')"
+    [ "$STATE_OWNER" = "$(id -u)" ] || return 1
+    case "$STATE_MODE" in
+      ''|*[!0-7]*) return 1 ;;
+    esac
+    # Owner needs rwx; nobody else may write.
+    [ $((0$STATE_MODE & 0700)) -eq $((0700)) ] || return 1
+    [ $((0$STATE_MODE & 022)) -eq 0 ]
+}
+
+func_fix_state_dir() {
+    if func_state_dir_is_safe; then
+        return 0
+    fi
+
+    log "[WARN] State directory $STATE_DIR has unsafe ownership/mode (owner=${STATE_OWNER:-unknown} mode=${STATE_MODE:-unknown}; running as uid $(id -u))"
+    log "[WARN] The provider requires it to be owned by the running user and not writable by group/other"
+
+    # Drop the group/other write bits. This alone fixes a world-writable
+    # directory that is already owned by the running user.
+    chmod -R go-w "$STATE_DIR" 2>/dev/null || true
+    chmod 700 "$STATE_DIR" 2>/dev/null || true
+
+    if func_state_dir_is_safe; then
+        log "[INFO] Corrected $STATE_DIR ownership/permissions"
+        return 0
+    fi
+
+    log "[ERROR] Cannot make $STATE_DIR safe for the provider" >&2
+    if [ "${STATE_OWNER:-}" = "$(id -u)" ]; then
+        log "[ERROR] It is owned by the running user but has the wrong mode or is read-only" >&2
+        log "[ERROR] chmod 700 <source>, and make sure the mount is not read-only" >&2
+    else
+        log "[ERROR] The container runs as uid $(id -u) but the directory is owned by uid ${STATE_OWNER:-unknown}" >&2
+        log "[ERROR] chown <source> to $(id -u):$(id -g) and chmod 700 it" >&2
+    fi
+    log "[ERROR] Do not use 'chmod 777'; the provider rejects world-writable state" >&2
+    exit 1
+}
+
 func_check_dir() {
+    if [ "$(id -u)" = "0" ]; then
+        log "[ERROR] Refusing to run the provider as root" >&2
+        log "[ERROR] Start the container through /app/entrypoint.sh as the urnetwork user" >&2
+        exit 1
+    fi
+    runtime_uid="$(id -u urnetwork 2>/dev/null || echo '')"
+    if [ -n "$runtime_uid" ] && [ "$(id -u)" != "$runtime_uid" ]; then
+        log "[ERROR] Unsupported uid $(id -u); the provider runs as urnetwork (uid $runtime_uid)" >&2
+        log "[ERROR] Use the image default user, or start with --user 0 to drop via gosu" >&2
+        exit 1
+    fi
     [ -d "$APP_DIR" ] || {
         log "[ERROR] APP_DIR '$APP_DIR' does not exist." >&2
         exit 1
@@ -146,7 +210,20 @@ func_check_dir() {
         log "[ERROR] Cannot cd to '$APP_DIR'." >&2
         exit 1
     }
-    mkdir -p "$STATE_DIR"
+    mkdir -p "$STATE_DIR" || {
+        log "[ERROR] Cannot create STATE_DIR '$STATE_DIR'." >&2
+        log "[ERROR] Check the -v / --mount source and its permissions." >&2
+        exit 1
+    }
+    func_fix_state_dir
+    # access(2) ignores a read-only mount, so probe with a real file.
+    WRITE_TEST="$STATE_DIR/.write-test.$$"
+    if ! ( : > "$WRITE_TEST" ) 2>/dev/null; then
+        log "[ERROR] State directory $STATE_DIR is not writable by uid $(id -u)" >&2
+        log "[ERROR] Expected owner rwx (mode 700); the mount may be read-only" >&2
+        exit 1
+    fi
+    rm -f "$WRITE_TEST"
 }
 
 # === Credential Validation ===
@@ -187,10 +264,12 @@ func_check_proxy() {
 }
 
 # === JWT Validation ===
-# The bootstrap token is a standard JWT. We can verify its shape and
-# lifetime locally; the signature is checked by the operator API.
+# The auth command writes `jwt`. The provider then keeps the durable token in
+# `.provider.jwt` and consumes/moves the bootstrap file. Check both, otherwise
+# every restart looks unauthenticated and a single-use auth code is exchanged
+# again.
 func_jwt_payload() {
-    cut -d. -f2 "$JWT_FILE" | tr '_-' '/+' | awk '{
+    cut -d. -f2 "$1" | tr '_-' '/+' | awk '{
         l = length($0) % 4
         if (l == 2) print $0 "=="
         else if (l == 3) print $0 "="
@@ -198,11 +277,12 @@ func_jwt_payload() {
     }'
 }
 
-func_jwt_valid() {
-    [ -s "$JWT_FILE" ] || return 1
-    [ "$(awk -F. '{print NF}' "$JWT_FILE" 2>/dev/null)" = "3" ] || return 1
+func_jwt_valid_file() {
+    jwt_path="$1"
+    [ -s "$jwt_path" ] || return 1
+    [ "$(awk -F. '{print NF}' "$jwt_path" 2>/dev/null)" = "3" ] || return 1
 
-    payload="$(func_jwt_payload 2>/dev/null | base64 -d 2>/dev/null)" || return 1
+    payload="$(func_jwt_payload "$jwt_path" 2>/dev/null | base64 -d 2>/dev/null)" || return 1
     [ -n "$payload" ] || return 1
 
     exp="$(printf '%s' "$payload" | jq -r '.exp // empty' 2>/dev/null)" || return 1
@@ -219,6 +299,13 @@ func_jwt_valid() {
       *) [ "$nbf" -le "$now" ] || return 1 ;;
     esac
     return 0
+}
+
+func_jwt_valid() {
+    if [ -s "$JWT_FILE" ] && func_jwt_valid_file "$JWT_FILE"; then
+        return 0
+    fi
+    [ -s "$PROVIDER_JWT_FILE" ] && func_jwt_valid_file "$PROVIDER_JWT_FILE"
 }
 
 # === Provider Flags ===
@@ -301,7 +388,35 @@ func_build_provider_flags() {
 # the identity and payout wallet are untouched.
 func_clear_auth_state() {
     rm -f "$JWT_FILE"
+    rm -f "$PROVIDER_JWT_FILE" 2>/dev/null || true
     rm -f "$STATE_DIR/.provider.jwt.rejected" 2>/dev/null || true
+}
+
+# Print the provider's own output whenever authentication fails. Hiding it
+# behind DEBUG=true made a permission panic look like a bad or already-used
+# auth code, and the single-use warning then pointed in the wrong direction.
+func_report_auth_failure() {
+    AUTH_FAILURE_KIND="other"
+    log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
+
+    if [ -z "$AUTH_OUTPUT" ]; then
+        log "[ERROR] The provider produced no output" >&2
+        return 0
+    fi
+
+    printf '%s\n' "$AUTH_OUTPUT" | while IFS= read -r line; do
+        log "[ERROR]   $line" >&2
+    done
+
+    case "$AUTH_OUTPUT" in
+      *"must be owned and not writable by other users"*)
+        AUTH_FAILURE_KIND="permissions"
+        log "[ERROR] $STATE_DIR is owned by another user or writable by group/other" >&2
+        log "[ERROR] The provider refuses to write its registration/JWT there" >&2
+        log "[ERROR] Use chmod 700 (never 777) on the mounted directory" >&2
+        ;;
+    esac
+    return 0
 }
 
 func_login_userpass_once() {
@@ -318,14 +433,12 @@ func_login_userpass_once() {
         echo "DEBUG: AUTH_OUTPUT=$AUTH_OUTPUT"
     fi
 
-    if [ -s "$JWT_FILE" ] && func_jwt_valid; then
+    # Check the token this login just wrote, not the durable fallback.
+    if [ -s "$JWT_FILE" ] && func_jwt_valid_file "$JWT_FILE"; then
         return 0
     fi
 
-    log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
-    echo "$AUTH_OUTPUT" | grep -E '^panic:' | while read -r line; do
-        log "[ERROR] $line" >&2
-    done
+    func_report_auth_failure
     return 1
 }
 
@@ -368,12 +481,15 @@ func_login_authcode() {
             echo "DEBUG: AUTH_OUTPUT=$AUTH_OUTPUT"
         fi
 
-        if [ -s "$JWT_FILE" ] && func_jwt_valid; then
+        # Check the token this exchange just wrote, not the durable fallback.
+        if [ -s "$JWT_FILE" ] && func_jwt_valid_file "$JWT_FILE"; then
             log "[INFO] Authentication successful - JWT written"
             return 0
         fi
-        log "[ERROR] Authentication failed (exit code: $AUTH_EXIT_CODE)" >&2
-        log "[WARN] Auth codes are single use; if this one was already exchanged, restart the container with a fresh AUTHCODE" >&2
+        func_report_auth_failure
+        if [ "$AUTH_FAILURE_KIND" != "permissions" ]; then
+            log "[WARN] Auth codes are single use; if the output above shows the code was already used, restart the container with a fresh AUTHCODE" >&2
+        fi
         log "[INFO] Will retry authentication in 5 minutes (300 seconds)"
         sleep 300
     done
@@ -588,7 +704,7 @@ func_start_provider() {
 
         if grep -q 'startup_recovery_required' "$PROVIDER_LOG" 2>/dev/null; then
             log "[ERROR] The provider needs its original identity (startup_recovery_required)"
-            log "[ERROR] Restore the /root/.urnetwork backup, or set ALLOW_CLIENT_REGISTRATION=Y to register a new identity"
+            log "[ERROR] Restore the $STATE_DIR backup, or set ALLOW_CLIENT_REGISTRATION=Y to register a new identity"
         fi
 
         # A provider that dies within seconds never finished starting: the

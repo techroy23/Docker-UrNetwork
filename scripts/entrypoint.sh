@@ -13,9 +13,12 @@ set -e
 #
 # Behavior:
 #   - Logs timestamped messages for visibility.
-#   - Normalizes AUTH to lowercase.
+#   - Runs as the unprivileged `urnetwork` user (the image's default USER).
+#   - If started as root, drops to `urnetwork` through gosu before startup.
 #   - Executes the matching startup script.
 #   - Exits with an error if AUTH is invalid.
+
+APP_USER="urnetwork"
 
 # === Logging Helper ===
 log() {
@@ -24,13 +27,35 @@ log() {
 
 log "Script version: v10.17.2026"
 
+# The provider resolves its state directory from HOME.
+export HOME=/home/urnetwork
+
+# Provider custody is tied to the runtime UID. Only the image default (1000)
+# and root (which drops through gosu) are supported.
+runtime_uid="$(id -u "$APP_USER" 2>/dev/null || echo '')"
+if [ "$(id -u)" != "0" ] && [ -n "$runtime_uid" ] && [ "$(id -u)" != "$runtime_uid" ]; then
+  log "[ERROR] Unsupported runtime uid $(id -u); the provider runs as $APP_USER (uid $runtime_uid)"
+  log "[ERROR] Start the image with its default user, or with --user 0 to drop via gosu"
+  exit 1
+fi
+
+# Root is not the normal path: the image runs as `urnetwork`. Keep gosu for
+# the case where the container is explicitly started with --user 0.
+run_as_user() {
+  if [ "$(id -u)" = "0" ]; then
+    log "[INFO] Started as root; dropping privileges to $APP_USER"
+    exec gosu "$APP_USER:$APP_USER" "$@"
+  fi
+  exec "$@"
+}
+
 # Default to "userpass" if AUTH is not set
 AUTH="${AUTH:-userpass}"
 AUTH="$(echo "$AUTH" | tr '[:upper:]' '[:lower:]')"
 
 # === Auth mode dispatch ===
 run_userpass() {
-  exec /app/start_userpass.sh
+  run_as_user /app/start_userpass.sh
 }
 
 run_authcode() {
@@ -41,7 +66,7 @@ run_authcode() {
     exit 1
   fi
   log "Auth code provided"
-  exec /app/start_authcode.sh "$AUTH_CODE"
+  run_as_user /app/start_authcode.sh "$AUTH_CODE"
 }
 
 case "$AUTH" in

@@ -4,7 +4,12 @@ services:
     container_name: urnetwork
     platform: linux/amd64
     restart: always
-    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    sysctls:
+      net.ipv4.ip_forward: "1"
+      net.ipv4.ip_unprivileged_port_start: "0"
     pull_policy: always
     logging:
       driver: json-file
@@ -21,9 +26,19 @@ services:
       ALLOW_CLIENT_REGISTRATION: "auto"
       DEBUG: "false"
     volumes:
-      - /path/to/your/proxy.txt:/app/proxy.txt
+      - type: bind
+        source: /path/to/your/proxy.txt
+        target: /app/proxy.txt
       # Keep provider identity and credentials across container re-creates.
-      - urnetwork_data:/root/.urnetwork
+      # Long syntax is the compose equivalent of `--mount type=volume,...`.
+      - type: volume
+        source: urnetwork_data
+        target: /home/urnetwork/.urnetwork
+      # To store the state in a host directory instead, replace the volume
+      # entry above with (create it first, chown 1000:1000, never chmod 777):
+      # - type: bind
+      #   source: /path/to/urnetwork_data
+      #   target: /home/urnetwork/.urnetwork
     ports:
       - "8080:8080"
 
