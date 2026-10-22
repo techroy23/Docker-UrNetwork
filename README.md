@@ -6,11 +6,6 @@ A minimal Docker setup that automatically fetches, updates, and runs the latest 
 ## Build
 - UrNetwork_nightly v2026.10.20-1077406510
 
-## Links
-| DockerHub | GitHub | Invite |
-|----------|----------|----------|
-| [![Docker Hub](https://img.shields.io/badge/ㅤ-View%20on%20Docker%20Hub-blue?logo=docker&style=for-the-badge)](https://hub.docker.com/r/techroy23/docker-urnetwork) | [![GitHub Repo](https://img.shields.io/badge/ㅤ-View%20on%20GitHub-black?logo=github&style=for-the-badge)](https://github.com/techroy23/Docker-UrNetwork) | [![Invite Link](https://img.shields.io/badge/ㅤ-Join%20UrNetwork%20Now-brightgreen?logo=linktree&style=for-the-badge)](https://ur.io/c?bonus=0MYG84) |
-
 ## Features
 - Automated retrieval of the latest urNetwork Provider binary on startup (nightly build)
 - Daily in‑container update at **00:00 UTC** (configurable with `UPDATE_TIME`)
@@ -91,7 +86,7 @@ be readable by the runtime UID (1000 by default).
 > ```sh
 > # Named volume (one-time; --user 0 is used only for this migration)
 > docker run --rm --user 0 -v urnetwork_data:/data \
->   --entrypoint sh techroy23/docker-urnetwork:latest \
+>   --entrypoint sh urfoundation/docker-miner:latest \
 >   -c 'chown -R 1000:1000 /data && chmod 700 /data'
 >
 > # Host directory
@@ -124,7 +119,7 @@ docker run -d --platform linux/amd64 \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   -v urnetwork_data:/home/urnetwork/.urnetwork \
   -p 8080:8080 \
-  techroy23/docker-urnetwork:latest
+  urfoundation/docker-miner:latest
 
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
@@ -138,7 +133,7 @@ docker run -d --platform linux/arm64 \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   -v urnetwork_data:/home/urnetwork/.urnetwork \
   -p 8080:8080 \
-  techroy23/docker-urnetwork:latest
+  urfoundation/docker-miner:latest
 ```
 
 ## Run with auth code
@@ -156,7 +151,7 @@ docker run -d --platform linux/amd64 \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   -v urnetwork_data:/home/urnetwork/.urnetwork \
   -p 8080:8080 \
-  techroy23/docker-urnetwork:latest
+  urfoundation/docker-miner:latest
 
 # Option 2 : arm64 build
 docker run -d --platform linux/arm64 \
@@ -169,7 +164,7 @@ docker run -d --platform linux/arm64 \
   -v /path/to/your/proxy.txt:/app/proxy.txt \
   -v urnetwork_data:/home/urnetwork/.urnetwork \
   -p 8080:8080 \
-  techroy23/docker-urnetwork:latest
+  urfoundation/docker-miner:latest
 ```
 
 ## Run with every listed operator
@@ -184,7 +179,7 @@ docker run -d --platform linux/amd64 \
   -e ALL_OPERATORS='Y' \
   -v urnetwork_data:/home/urnetwork/.urnetwork \
   -p 8080:8080 \
-  techroy23/docker-urnetwork:latest
+  urfoundation/docker-miner:latest
 ```
 Each operator is authenticated with your account when its token is missing. To register every operator from a Bittensor hotkey instead, add:
 ```sh
@@ -202,18 +197,3 @@ When authentication fails, the container now prints the provider's own output, e
 [ERROR] /home/urnetwork/.urnetwork is owned by another user or writable by group/other
 ```
 In that case fix the mount permissions (`chmod 700`), not `AUTHCODE` or the password.
-
-## Promo Video
-<div align="center">
-  <a href="https://www.youtube.com/watch?v=2Oy4X88s9FY">
-    <img src="https://img.youtube.com/vi/2Oy4X88s9FY/0.jpg" alt="Watch the Video">
-  </a>
-</div>
-
-## Promo
-<ul><li><a href="https://ur.io/c?bonus=0MYG84"> [ REGISTER HERE ] </a></li></ul>
-<div align="center">
-  <a href="https://ur.io/c?bonus=0MYG84">
-    <img src="screenshot/img0.png" alt="Alt text">
-  </a>
-</div>
